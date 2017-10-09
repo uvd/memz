@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo "# Running migrations"
+bin/memz command Elixir.Memz.ReleaseTasks seed
+echo "# Migrations ran successfully"

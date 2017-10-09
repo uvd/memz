@@ -44,7 +44,8 @@ defmodule Memz.Mixfile do
       {:exfmt, "~> 0.5.0"},
       {:mix_test_watch, "~> 0.3", only: [:dev, :test], runtime: false},
       {:dogma, "~> 0.1", only: [:dev, :test]},
-      {:credo, "~> 0.8", only: [:dev, :test], runtime: false}
+      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
+      {:distillery, "~> 1.5", runtime: false}
     ]
   end
 
