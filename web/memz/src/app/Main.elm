@@ -9,11 +9,16 @@ import Json.Decode as Decode
 import Json.Encode as Encode
 
 
-type alias Model =
+type alias NewEvent =
     { name : String
     , owner : String
     , endDateTime : String
     , step : Step
+    }
+
+
+type alias Model =
+    { newEvent : NewEvent
     }
 
 
@@ -42,13 +47,16 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { name = ""
-    , owner = ""
-    , endDateTime = ""
-    , step = NameStep
+    { newEvent =
+        { name = ""
+        , owner = ""
+        , endDateTime = ""
+        , step = NameStep
+        }
     }
 
 
+homePage : a -> Html msg
 homePage model =
     p [] [ text "Long term memories made in real time" ]
 
@@ -69,25 +77,25 @@ incrementCurrentStep step =
 newEvent : Model -> Html Msg
 newEvent model =
     div []
-        [ case model.step of
+        [ case model.newEvent.step of
             NameStep ->
                 Html.form [ onSubmit IncrementStep ]
-                    [ input [ type_ "text", placeholder "Your name", value model.name, onInput Name, required True ] []
+                    [ input [ type_ "text", placeholder "Your name", value model.newEvent.name, onInput Name, required True ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
 
             OwnerStep ->
                 Html.form [ onSubmit IncrementStep ]
-                    [ input [ type_ "text", placeholder "Event name", value model.owner, onInput Owner, required True ] []
+                    [ input [ type_ "text", placeholder "Event name", value model.newEvent.owner, onInput Owner, required True ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
 
             EndDateTimeStep ->
                 Html.form [ onSubmit CreateEvent ]
-                    [ input [ type_ "datetime-local", placeholder "Event date", value model.endDateTime, onInput EndDateTime, required True ] []
+                    [ input [ type_ "datetime-local", placeholder "Event date", value model.newEvent.endDateTime, onInput EndDateTime, required True ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
-        , p [] [ text (model.name ++ " " ++ model.owner ++ model.endDateTime) ]
+        , p [] [ text (model.newEvent.name ++ " " ++ model.newEvent.owner ++ model.newEvent.endDateTime) ]
         ]
 
 
@@ -96,27 +104,32 @@ view =
     newEvent
 
 
+updateNewEvent : (NewEvent -> NewEvent) -> Model -> Model
+updateNewEvent update m =
+    let
+        updatedNewEvent =
+            update m.newEvent
+    in
+    { m | newEvent = updatedNewEvent }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Name n ->
-            ( { model | name = n }, Cmd.none )
+            ( updateNewEvent (\x -> { x | name = n }) model, Cmd.none )
 
         Owner o ->
-            ( { model | owner = o }, Cmd.none )
+            ( updateNewEvent (\x -> { x | owner = o }) model, Cmd.none )
 
         EndDateTime d ->
-            ( { model | endDateTime = d }, Cmd.none )
+            ( updateNewEvent (\x -> { x | endDateTime = d }) model, Cmd.none )
 
         IncrementStep ->
-            let
-                currentStep =
-                    model.step
-            in
-            ( { model | step = incrementCurrentStep currentStep }, Cmd.none )
+            ( updateNewEvent (\x -> { x | step = incrementCurrentStep x.step }) model, Cmd.none )
 
         CreateEvent ->
-            ( model, postCreateEvent (bodyEncoder { name = model.name, owner = model.owner, endDateTime = model.endDateTime }) )
+            ( model, postCreateEvent (bodyEncoder model.newEvent) )
 
         CreateEventResponse (Result.Ok d) ->
             ( model, Cmd.none )
