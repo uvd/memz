@@ -14,5 +14,6 @@ On your local machine, in memz/backend/ directory, run:
 To run the tests:
 
 ```
+    docker-compose -f docker-compose.test.yml up
     docker-compose exec elixir mix test
 ```
