@@ -1,12 +1,12 @@
 module Main exposing (..)
 
+import Date exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (Error)
-import Json.Encode as Encode
 import Json.Decode as Decode
-import Date exposing (..)
+import Json.Encode as Encode
 
 
 type alias Model =
@@ -113,7 +113,7 @@ update msg model =
                 currentStep =
                     model.step
             in
-                ( { model | step = incrementCurrentStep currentStep }, Cmd.none )
+            ( { model | step = incrementCurrentStep currentStep }, Cmd.none )
 
         CreateEvent ->
             ( model, postCreateEvent (bodyEncoder { name = model.name, owner = model.owner, endDateTime = model.endDateTime }) )
@@ -152,7 +152,7 @@ bodyEncoder data =
                   )
                 ]
     in
-        Encode.encode 0 encodedValue
+    Encode.encode 0 encodedValue
 
 
 responseDecoder : Decode.Decoder Event
@@ -171,5 +171,5 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = (always Sub.none)
+        , subscriptions = always Sub.none
         }
