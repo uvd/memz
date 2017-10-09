@@ -5,6 +5,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (Error)
 import Json.Encode as Encode
+import Json.Decode as Decode
+import Date exposing (..)
 
 
 type alias Model =
@@ -12,6 +14,14 @@ type alias Model =
     , owner : String
     , endDateTime : String
     , step : Step
+    }
+
+
+type alias Event =
+    { id : Int
+    , name : String
+    , owner : String
+    , endDateTime : String
     }
 
 
@@ -26,11 +36,8 @@ type Msg
     | Owner String
     | EndDateTime String
     | IncrementStep
-
-
-
--- | CreateEvent
--- | CreateEventResponse (Result Http.Error String)
+    | CreateEvent
+    | CreateEventResponse (Result Http.Error Event)
 
 
 initialModel : Model
@@ -76,7 +83,7 @@ newEvent model =
                     ]
 
             EndDateTimeStep ->
-                Html.form [ onSubmit IncrementStep ]
+                Html.form [ onSubmit CreateEvent ]
                     [ input [ type_ "datetime-local", placeholder "Event date", value model.endDateTime, onInput EndDateTime, required True ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
@@ -108,14 +115,14 @@ update msg model =
             in
                 ( { model | step = incrementCurrentStep currentStep }, Cmd.none )
 
+        CreateEvent ->
+            ( model, postCreateEvent (bodyEncoder { name = model.name, owner = model.owner, endDateTime = model.endDateTime }) )
 
+        CreateEventResponse (Result.Ok d) ->
+            ( model, Cmd.none )
 
--- CreateEvent ->
---     (model, postCreateEvent model)
--- CreateEventResponse (Ok d)
---     -> (model, Cmd.none)
--- CreateEventResponse (Err d)
---     -> (model, Cmd.none)
+        CreateEventResponse (Result.Err d) ->
+            ( model, Cmd.none )
 
 
 init : ( Model, Cmd Msg )
@@ -125,19 +132,37 @@ init =
     )
 
 
+postCreateEvent : String -> Cmd Msg
+postCreateEvent encodedData =
+    Http.send CreateEventResponse <|
+        Http.post "/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
+
+
 bodyEncoder : { a | name : String, owner : String, endDateTime : String } -> String
 bodyEncoder data =
     let
         encodedValue =
             Encode.object
-                [ 
-                    ( "name", Encode.string data.name ),
-                    ( "owner", Encode.string data.owner ),
-                    ( "endDateTime", Encode.string data.endDateTime )
+                [ ( "event"
+                  , Encode.object
+                        [ ( "name", Encode.string data.name )
+                        , ( "owner", Encode.string data.owner )
+                        , ( "endDateTime", Encode.string data.endDateTime )
+                        ]
+                  )
                 ]
     in
         Encode.encode 0 encodedValue
 
+
+responseDecoder : Decode.Decoder Event
+responseDecoder =
+    Decode.map4
+        Event
+        (Decode.at [ "id" ] Decode.int)
+        (Decode.at [ "name" ] Decode.string)
+        (Decode.at [ "owner" ] Decode.string)
+        (Decode.at [ "endDateTime" ] Decode.string)
 
 
 main : Program Never Model Msg
