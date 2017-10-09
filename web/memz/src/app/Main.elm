@@ -8,27 +8,23 @@ import Maybe exposing (..)
 
 
 type alias Model =
-    { newEvent :
-        { name : Maybe String
-        , owner : Maybe String
-        , endDateTime : Maybe Date
-        }
+    { name : String
+    , owner : String
+    , endDateTime : String
     }
-
-
+    
+    
 type Msg =
-    Name String
+    Name String | Owner String | EndDateTime String
 
-
+        
 initialModel : Model
 initialModel =
-    { newEvent =
-        { name = Nothing
-        , owner = Nothing
-        , endDateTime = Nothing
-        }
+    { name = ""
+    , owner = ""
+    , endDateTime = ""
     }
-
+    
 
 homePage model =
     p [] [ text "Long term memories made in real time" ]
@@ -37,8 +33,10 @@ homePage model =
 newEvent: Model -> Html Msg
 newEvent model =
     div [] [
-        input [type_ "text", placeholder "Your name", value (Maybe.withDefault "" model.newEvent.name)]
-        []
+        input [type_ "text", placeholder "Your name", value model.name, onInput Name] [],
+        input [type_ "text", placeholder "Event name", value model.owner, onInput Owner] [],
+        input [type_ "datetime-local", placeholder "Event date", value model.endDateTime] [],
+        p [] [text (model.name ++ " " ++ model.owner ++ model.endDateTime)]
     ]
     -- (case model.newEvent.name of
     --   Nothing -> []
@@ -52,7 +50,10 @@ view =
 
 update : Msg -> Model -> Model
 update msg model =
-    model
+    case msg of
+        Name n -> {model | name = n}
+        Owner o -> {model | owner = o}
+        EndDateTime d -> {model | endDateTime = d}
 
 
 main =
