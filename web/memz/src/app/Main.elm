@@ -7,6 +7,16 @@ import Html.Events exposing (onInput, onSubmit)
 import Http exposing (Error)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Navigation
+import Debug exposing (log)
+
+
+-- ROUTING
+
+
+type Route
+    = HomePage
+    | NewEventPage
 
 
 type alias NewEvent =
@@ -19,6 +29,7 @@ type alias NewEvent =
 
 type alias Model =
     { newEvent : NewEvent
+    , route : Route
     }
 
 
@@ -43,6 +54,7 @@ type Msg
     | IncrementStep
     | CreateEvent
     | CreateEventResponse (Result Http.Error Event)
+    | UrlChange Navigation.Location
 
 
 initialModel : Model
@@ -53,12 +65,16 @@ initialModel =
         , endDateTime = ""
         , step = NameStep
         }
+    , route = HomePage
     }
 
 
 homePage : a -> Html msg
 homePage model =
-    p [] [ text "Long term memories made in real time" ]
+    div []
+        [ p [] [ text "Long term memories made in real time" ]
+        , a [ href "#create-event" ] [ text "Create an event" ]
+        ]
 
 
 incrementCurrentStep : Step -> Step
@@ -95,13 +111,20 @@ newEvent model =
                     [ input [ type_ "datetime-local", placeholder "Event date", value model.newEvent.endDateTime, onInput EndDateTime, required True ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
+        , a [ href "#create-event" ] [ text "click me!" ]
+        , a [ href "#banter" ] [ text "go home!" ]
         , p [] [ text (model.newEvent.name ++ " " ++ model.newEvent.owner ++ model.newEvent.endDateTime) ]
         ]
 
 
 view : Model -> Html Msg
-view =
-    newEvent
+view model =
+    case model.route of
+        HomePage ->
+            homePage model
+
+        NewEventPage ->
+            newEvent model
 
 
 updateNewEvent : (NewEvent -> NewEvent) -> Model -> Model
@@ -110,7 +133,7 @@ updateNewEvent update m =
         updatedNewEvent =
             update m.newEvent
     in
-    { m | newEvent = updatedNewEvent }
+        { m | newEvent = updatedNewEvent }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -137,9 +160,21 @@ update msg model =
         CreateEventResponse (Result.Err d) ->
             ( model, Cmd.none )
 
+        UrlChange location ->
+            case location.hash of
+                "#create-event" ->
+                    ( { model | route = NewEventPage }, Cmd.none )
 
-init : ( Model, Cmd Msg )
-init =
+                _ ->
+                    ( { model | route = HomePage }, Cmd.none )
+
+
+
+-- UrlChange
+
+
+init : Navigation.Location -> ( Model, Cmd Msg )
+init _ =
     ( initialModel
     , Cmd.none
     )
@@ -165,7 +200,7 @@ bodyEncoder data =
                   )
                 ]
     in
-    Encode.encode 0 encodedValue
+        Encode.encode 0 encodedValue
 
 
 responseDecoder : Decode.Decoder Event
@@ -180,7 +215,7 @@ responseDecoder =
 
 main : Program Never Model Msg
 main =
-    program
+    Navigation.program UrlChange
         { init = init
         , view = view
         , update = update
