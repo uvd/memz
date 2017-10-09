@@ -2,10 +2,8 @@ defmodule MemzWeb.EventControllerTest do
   use MemzWeb.ConnCase
 
   alias Memz.Events
-  alias Memz.Events.Event
 
   @create_attrs %{end_date: ~N[2020-04-17 14:00:00.000000], name: "some name", owner: "some owner"}
-  @update_attrs %{end_date: ~N[2021-05-18 15:01:01.000000], name: "some updated name", owner: "some updated owner"}
   @invalid_attrs %{end_date: nil, name: nil, owner: nil}
   @invalid_name_attrs %{end_date: ~N[2021-05-18 15:01:01.000000], name: "s", owner: "some owner"}
 
