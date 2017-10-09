@@ -12,8 +12,9 @@ config :logger, level: :warn
 # Configure your database
 config :memz, Memz.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "memz_test",
-  hostname: "localhost",
+  username: System.get_env("POSTGRES_USER"),
+  password: System.get_env("POSTGRES_PASSWORD"),
+  database: System.get_env("POSTGRES_DB"),
+  hostname: System.get_env("POSTGRES_HOST"),
+  port: 5432,
   pool: Ecto.Adapters.SQL.Sandbox

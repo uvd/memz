@@ -50,4 +50,12 @@ defmodule Memz.DataCase do
       end)
     end)
   end
+
+  def generate_string_of_length(len) do
+    0..len
+    |> Enum.to_list
+    |> Enum.map(fn _ -> "a" end)
+    |> Enum.join("")
+  end
+
 end

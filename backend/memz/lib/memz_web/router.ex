@@ -19,8 +19,10 @@ defmodule MemzWeb.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", MemzWeb do
-  #   pipe_through :api
-  # end
+   # Other scopes may use custom stacks.
+   scope "/v1", MemzWeb do
+     pipe_through :api
+
+     resources "/events", EventController, only: [:create]
+   end
 end
