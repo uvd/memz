@@ -4,11 +4,11 @@ set -e
 
 echo "Setting VM_IP"
 
-if [ -z ${ECS_DNS_POSTGRES+x} ]; then
-    export VM_IP=$(ip address | grep 10.32.101 | cut -d" " -f6 | cut -d"/" -f1)
-else
+#if [ -z ${ECS_DNS_POSTGRES+x} ]; then
+#    export VM_IP=$(ip address | grep 10.32.101 | cut -d" " -f6 | cut -d"/" -f1)
+#else
     export VM_IP=$(hostname -i)
-fi
+#fi
 
 export VM_NAME=memz
 echo "Set VM_IP as ${VM_IP}"

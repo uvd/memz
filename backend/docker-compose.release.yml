@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+
+  erlang:
+    image: memz:latest
+    command: foreground
+    environment:
+      - MIX_ENV=prod
+      - PORT=4000
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=memz_prod
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PORT=5432
+      - GUARDIAN_SECRET_KEY=memz_secret
+      - SECRET_KEY_BASE=secret_key_base
+      - VIRTUAL_HOST=api.memz.local
+      - VIRTUAL_PORT=4000
+      - NODE_COOKIE=memz
+    links:
+      - postgres
+    depends_on:
+      - postgres
+
+  proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  postgres:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=memz_prod
+    ports:
+      - "32783:5432"
