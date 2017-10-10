@@ -218,7 +218,7 @@ bodyEncoder data =
                   , Encode.object
                         [ ( "name", Encode.string data.name )
                         , ( "owner", Encode.string data.owner )
-                        , ( "endDateTime", Encode.string data.endDateTime )
+                        , ( "end_date", Encode.string data.endDateTime )
                         ]
                   )
                 ]
@@ -238,7 +238,7 @@ responseDecoder =
         (Decode.at [ "id" ] Decode.int)
         (Decode.at [ "name" ] Decode.string)
         (Decode.at [ "owner" ] Decode.string)
-        (Decode.at [ "endDateTime" ] Decode.string)
+        (Decode.at [ "end_date" ] Decode.string)
 
 
 main : Program Never Model Msg
