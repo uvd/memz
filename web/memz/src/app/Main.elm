@@ -41,6 +41,7 @@ type alias Event =
     , name : String
     , owner : String
     , endDateTime : String
+    , slug : String
     }
 
 
@@ -234,7 +235,7 @@ init location =
 postCreateEvent : String -> Cmd Msg
 postCreateEvent encodedData =
     Http.send CreateEventResponse <|
-        getCreateEventRequest "http://localhost:3000/v1/events" (Http.stringBody "application/json" encodedData)
+        getCreateEventRequest "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData)
 
 
 getCreateEventRequest : String -> Http.Body -> Http.Request EventResponse
@@ -297,12 +298,13 @@ errorResponseDecoder =
 responseDecoder : Decode.Decoder Event
 responseDecoder =
     Decode.at [ "data" ]
-        (Decode.map4
+        (Decode.map5
             Event
             (Decode.at [ "id" ] Decode.int)
             (Decode.at [ "name" ] Decode.string)
             (Decode.at [ "owner" ] Decode.string)
             (Decode.at [ "end_date" ] Decode.string)
+            (Decode.at [ "slug" ] Decode.string)
         )
 
 
