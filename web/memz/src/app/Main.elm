@@ -107,6 +107,9 @@ newEvent model =
                 Html.form [ onSubmit IncrementStep ]
                     [ input [ type_ "text", placeholder "Your name", value model.newEvent.name, onInput Name, required True, minlength 4, maxlength 20 ] []
                     , input [ type_ "submit", value "Next" ] []
+                    , div [] (model.newEvent.errors
+                                  |> List.concatMap (\(_, errors) -> errors)
+                                  |> List.map (\err -> (span [] [text err])))
                     ]
 
             OwnerStep ->
