@@ -14,3 +14,5 @@ install:
 serve:
 	cd memz && ./node_modules/.bin/webpack-dev-server --host 0.0.0.0 --port 4200 --colors
 
+mockApi:
+	cd memz/mock-api && node api.js

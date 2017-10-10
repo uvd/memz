@@ -18,6 +18,7 @@
     "webpack-merge": "^4.1.0"
   },
   "dependencies": {
-    "bootstrap": "4.0.0-beta"
+    "bootstrap": "4.0.0-beta",
+    "json-server": "^0.12.0"
   }
 }
