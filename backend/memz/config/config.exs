@@ -27,6 +27,9 @@ config :memz, MemzWeb.Guardian,
        issuer: "MEMZ",
        secret_key: "CyNQmG/EVQdO2MFxIKYVhjNV1SAZ/3Inn1fn5CnxJL8vmLe/5VyCR0MLunFk5e3R"
 
+config :cors_plug,
+       expose: ["Authorization"]
+
 if Mix.env == :dev do
   config :mix_test_watch,
      tasks: [
