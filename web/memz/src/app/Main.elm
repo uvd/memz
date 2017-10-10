@@ -206,7 +206,7 @@ init _ =
 postCreateEvent : String -> Cmd Msg
 postCreateEvent encodedData =
     Http.send CreateEventResponse <|
-        Http.post "/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
+        Http.post "http://localhost:3000/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
 
 
 bodyEncoder : { a | name : String, owner : String, endDateTime : String } -> String
