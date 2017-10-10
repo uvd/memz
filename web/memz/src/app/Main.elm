@@ -9,7 +9,7 @@ import Http exposing (Error)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Navigation
-
+import Dict exposing (get)
 
 -- ROUTING
 
@@ -31,6 +31,7 @@ type alias NewEvent =
 type alias Model =
     { newEvent : NewEvent
     , route : Route
+    , token: Maybe String
     }
 
 
@@ -41,6 +42,8 @@ type alias Event =
     , endDateTime : String
     }
 
+type alias EventResponse =
+    (String, Event)
 
 type alias ServerError =
     ( String, List String )
@@ -58,7 +61,7 @@ type Msg
     | EndDateTime String
     | IncrementStep
     | CreateEvent
-    | CreateEventResponse (Result Http.Error Event)
+    | CreateEventResponse (Result Http.Error EventResponse)
     | UrlChange Navigation.Location
 
 
@@ -75,6 +78,7 @@ initialModel : Model
 initialModel =
     { newEvent = initialNewEvent
     , route = HomePage
+    , token = Nothing
     }
 
 
@@ -164,8 +168,8 @@ update msg model =
         CreateEvent ->
             ( model, postCreateEvent (bodyEncoder model.newEvent) )
 
-        CreateEventResponse (Result.Ok d) ->
-            ( model, Cmd.none )
+        CreateEventResponse (Result.Ok (header, _)) ->
+            ({model | token = Just header }, Cmd.none )
 
         CreateEventResponse (Result.Err err) ->
             case err of
@@ -205,8 +209,34 @@ init location =
 
 postCreateEvent : String -> Cmd Msg
 postCreateEvent encodedData =
-    Http.send CreateEventResponse <|
-        Http.post "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
+    Http.send CreateEventResponse <| 
+        getCreateEventRequest "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData)
+        -- Http.post "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
+
+
+getCreateEventRequest : String -> Http.Body -> Http.Request EventResponse
+getCreateEventRequest url body =
+  Http.request
+    { method = "POST"
+    , headers = []
+    , url = url
+    , body = body
+    , expect = Http.expectStringResponse (\r 
+        -> 
+        let 
+            header = extractHeader "authorization" r
+            body = Decode.decodeString responseDecoder r.body
+        in
+            case (header, body) of 
+
+                (Just header, Ok body) -> Ok (header, body)
+                (Just _, Err error) -> Err error
+                (Nothing, Ok _) -> Err "No authorization header"
+                (Nothing, Err error) -> Err ("No authorization header, and " ++ error))
+
+    , timeout = Nothing
+    , withCredentials = False
+    }
 
 
 bodyEncoder : { a | name : String, owner : String, endDateTime : String } -> String
@@ -240,6 +270,10 @@ responseDecoder =
         (Decode.at [ "owner" ] Decode.string)
         (Decode.at [ "end_date" ] Decode.string)
 
+
+extractHeader : String -> Http.Response a -> Maybe String
+extractHeader name response =
+    Dict.get name response.headers
 
 main : Program Never Model Msg
 main =
