@@ -14,7 +14,7 @@ config :memz, Memz.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: System.get_env("POSTGRES_USER"),
   password: System.get_env("POSTGRES_PASSWORD"),
-  database: System.get_env("POSTGRES_DB"),
+  database: System.get_env("POSTGRES_DB")<>"_test",
   hostname: System.get_env("POSTGRES_HOST"),
   port: 5432,
   pool: Ecto.Adapters.SQL.Sandbox

@@ -45,7 +45,8 @@ defmodule Memz.Mixfile do
       {:mix_test_watch, "~> 0.3", only: [:dev, :test], runtime: false},
       {:dogma, "~> 0.1", only: [:dev, :test]},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:distillery, "~> 1.5", runtime: false}
+      {:distillery, "~> 1.5", runtime: false},
+      {:cors_plug, "~> 1.2"}
     ]
   end
 

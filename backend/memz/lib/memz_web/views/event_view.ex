@@ -7,13 +7,13 @@ defmodule MemzWeb.EventView do
   end
 
   def render("show.json", %{event: event}) do
-    %{event: render_one(event, EventView, "event.json")}
+    %{data: render_one(event, EventView, "event.json")}
   end
 
   def render("event.json", %{event: event}) do
     %{id: event.id,
       name: event.name,
       owner: event.owner,
-      end_date: event.end_date}
+      endDateTime: event.end_date}
   end
 end

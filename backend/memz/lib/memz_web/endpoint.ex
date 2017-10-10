@@ -38,6 +38,8 @@ defmodule MemzWeb.Endpoint do
     key: "_memz_key",
     signing_salt: "GwmACErQ"
 
+  plug CORSPlug
+
   plug MemzWeb.Router
 
   @doc """
