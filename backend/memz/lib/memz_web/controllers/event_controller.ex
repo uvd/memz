@@ -11,13 +11,13 @@ defmodule MemzWeb.EventController do
     %{
       "name" => name,
       "owner" => owner,
-      "endDateTime" => end_date_time
+      "end_date" => end_date_time
     } = event_params
 
     event_params = %{
       name: name,
       owner: owner,
-      end_date: end_date_time
+      end_date: Timex.parse!(end_date_time, "{ISO:Extended}")
     }
 
     with {:ok, %Event{} = event} <- Events.create_event(event_params) do

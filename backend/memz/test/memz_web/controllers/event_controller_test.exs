@@ -3,8 +3,9 @@ defmodule MemzWeb.EventControllerTest do
 
   alias Memz.Events
 
-  @create_attrs %{endDateTime: ~N[2020-04-17 14:00:00.000000], name: "some name", owner: "some owner"}
-  @invalid_name_attrs %{endDateTime: ~N[2021-05-18 15:01:01.000000], name: "s", owner: "some owner"}
+  @create_attrs %{end_date: "2017-11-10T01:00", name: "some name", owner: "some owner"}
+  @invalid_name_attrs %{end_date: "2017-11-10T01:00", name: "s", owner: "some owner"}
+  @invalid_name_attrs %{end_date: "2017-11-10T01:00", name: "s", owner: "some owner"}
 
   def fixture(:event) do
     {:ok, event} = Events.create_event(@create_attrs)
@@ -23,7 +24,7 @@ defmodule MemzWeb.EventControllerTest do
 
       assert json_response(conn, 201)["data"] == %{
         "id" => id,
-        "endDateTime" => "2020-04-17T14:00:00.000000",
+        "end_date" => "2017-11-10T01:00:00",
         "name" => "some name",
         "owner" => "some owner"}
     end

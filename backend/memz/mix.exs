@@ -20,7 +20,7 @@ defmodule Memz.Mixfile do
   def application do
     [
       mod: {Memz.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :timex]
     ]
   end
 
@@ -46,7 +46,8 @@ defmodule Memz.Mixfile do
       {:dogma, "~> 0.1", only: [:dev, :test]},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:distillery, "~> 1.5", runtime: false},
-      {:cors_plug, "~> 1.2"}
+      {:cors_plug, "~> 1.2"},
+      {:timex, "~> 3.1"}
     ]
   end
 
