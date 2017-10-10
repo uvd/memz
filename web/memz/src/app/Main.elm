@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Date exposing (..)
+import Debug exposing (log)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
@@ -8,7 +9,6 @@ import Http exposing (Error)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Navigation
-import Debug exposing (log)
 
 
 -- ROUTING
@@ -62,15 +62,18 @@ type Msg
     | UrlChange Navigation.Location
 
 
+initialNewEvent : NewEvent
+initialNewEvent =
+    { name = ""
+    , owner = ""
+    , endDateTime = ""
+    , step = NameStep
+    , errors = []
+    }
+      
 initialModel : Model
 initialModel =
-    { newEvent =
-        { name = ""
-        , owner = ""
-        , endDateTime = ""
-        , step = NameStep
-        , errors = []
-        }
+    { newEvent = initialNewEvent
     , route = HomePage
     }
 
@@ -139,7 +142,7 @@ updateNewEvent update m =
         updatedNewEvent =
             update m.newEvent
     in
-        { m | newEvent = updatedNewEvent }
+    { m | newEvent = updatedNewEvent }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -169,13 +172,14 @@ update msg model =
                     let
                         decodedResponse =
                             Decode.decodeString errorResponseDecoder badResponse.body
+                        updatedModel = {model | newEvent = initialNewEvent}
                     in
-                        case decodedResponse of
-                            Ok serverErrors ->
-                                ( updateNewEvent (\x -> { x | errors = serverErrors }) model, Cmd.none )
+                    case decodedResponse of
+                        Ok serverErrors ->
+                            ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
 
-                            Err _ ->
-                                ( model, Cmd.none )
+                        Err _ ->
+                            ( updatedModel, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -216,12 +220,12 @@ bodyEncoder data =
                   )
                 ]
     in
-        Encode.encode 0 encodedValue
+    Encode.encode 0 encodedValue
 
 
 errorResponseDecoder : Decode.Decoder (List ServerError)
 errorResponseDecoder =
-    (Decode.at [ "errors" ] (Decode.keyValuePairs (Decode.list Decode.string)))
+    Decode.at [ "errors" ] (Decode.keyValuePairs (Decode.list Decode.string))
 
 
 responseDecoder : Decode.Decoder Event
