@@ -24,6 +24,7 @@ type alias NewEvent =
     , owner : String
     , endDateTime : String
     , step : Step
+    , errors : List ServerError
     }
 
 
@@ -39,6 +40,10 @@ type alias Event =
     , owner : String
     , endDateTime : String
     }
+
+
+type alias ServerError =
+    ( String, List String )
 
 
 type Step
@@ -64,6 +69,7 @@ initialModel =
         , owner = ""
         , endDateTime = ""
         , step = NameStep
+        , errors = []
         }
     , route = HomePage
     }
@@ -96,13 +102,13 @@ newEvent model =
         [ case model.newEvent.step of
             NameStep ->
                 Html.form [ onSubmit IncrementStep ]
-                    [ input [ type_ "text", placeholder "Your name", value model.newEvent.name, onInput Name, required True ] []
+                    [ input [ type_ "text", placeholder "Your name", value model.newEvent.name, onInput Name, required True, minlength 4, maxlength 20 ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
 
             OwnerStep ->
                 Html.form [ onSubmit IncrementStep ]
-                    [ input [ type_ "text", placeholder "Event name", value model.newEvent.owner, onInput Owner, required True ] []
+                    [ input [ type_ "text", placeholder "Event name", value model.newEvent.owner, onInput Owner, required True, minlength 2, maxlength 30 ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
 
@@ -157,8 +163,22 @@ update msg model =
         CreateEventResponse (Result.Ok d) ->
             ( model, Cmd.none )
 
-        CreateEventResponse (Result.Err d) ->
-            ( model, Cmd.none )
+        CreateEventResponse (Result.Err err) ->
+            case err of
+                Http.BadStatus badResponse ->
+                    let
+                        decodedResponse =
+                            Decode.decodeString errorResponseDecoder badResponse.body
+                    in
+                        case decodedResponse of
+                            Ok serverErrors ->
+                                ( updateNewEvent (\x -> { x | errors = serverErrors }) model, Cmd.none )
+
+                            Err _ ->
+                                ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
         UrlChange location ->
             case location.hash of
@@ -167,10 +187,6 @@ update msg model =
 
                 _ ->
                     ( { model | route = HomePage }, Cmd.none )
-
-
-
--- UrlChange
 
 
 init : Navigation.Location -> ( Model, Cmd Msg )
@@ -201,6 +217,11 @@ bodyEncoder data =
                 ]
     in
         Encode.encode 0 encodedValue
+
+
+errorResponseDecoder : Decode.Decoder (List ServerError)
+errorResponseDecoder =
+    (Decode.at [ "errors" ] (Decode.keyValuePairs (Decode.list Decode.string)))
 
 
 responseDecoder : Decode.Decoder Event
