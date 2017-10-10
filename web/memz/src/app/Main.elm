@@ -123,8 +123,6 @@ newEvent model =
                     [ input [ type_ "datetime-local", placeholder "Event date", value model.newEvent.endDateTime, onInput EndDateTime, required True ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
-        , a [ href "#create-event" ] [ text "click me!" ]
-        , a [ href "#banter" ] [ text "go home!" ]
         , p [] [ text (model.newEvent.name ++ " " ++ model.newEvent.owner ++ model.newEvent.endDateTime) ]
         ]
 
@@ -208,7 +206,7 @@ init location =
 postCreateEvent : String -> Cmd Msg
 postCreateEvent encodedData =
     Http.send CreateEventResponse <|
-        Http.post "http://localhost:3000/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
+        Http.post "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
 
 
 bodyEncoder : { a | name : String, owner : String, endDateTime : String } -> String
