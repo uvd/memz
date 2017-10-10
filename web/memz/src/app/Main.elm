@@ -11,6 +11,7 @@ import Json.Encode as Encode
 import Navigation
 import Dict exposing (get)
 
+
 -- ROUTING
 
 
@@ -31,7 +32,7 @@ type alias NewEvent =
 type alias Model =
     { newEvent : NewEvent
     , route : Route
-    , token: Maybe String
+    , token : Maybe String
     }
 
 
@@ -42,16 +43,22 @@ type alias Event =
     , endDateTime : String
     }
 
+
 type alias EventResponse =
-    (String, Event)
+    ( String, Event )
+
 
 type alias ServerError =
     ( String, List String )
 
 
+type alias LocalStorageRecord =
+    ( String, String )
+
+
 type Step
-    = NameStep
-    | OwnerStep
+    = OwnerStep
+    | NameStep
     | EndDateTimeStep
 
 
@@ -70,11 +77,12 @@ initialNewEvent : NewEvent
 initialNewEvent =
     { name = ""
     , owner = ""
-    , endDateTime = ""
-    , step = NameStep
+    , endDateTime = "2017-10-11T13:04"
+    , step = OwnerStep
     , errors = []
     }
-      
+
+
 initialModel : Model
 initialModel =
     { newEvent = initialNewEvent
@@ -94,10 +102,10 @@ homePage model =
 incrementCurrentStep : Step -> Step
 incrementCurrentStep step =
     case step of
-        NameStep ->
-            OwnerStep
-
         OwnerStep ->
+            NameStep
+
+        NameStep ->
             EndDateTimeStep
 
         s ->
@@ -108,18 +116,20 @@ newEvent : Model -> Html Msg
 newEvent model =
     div []
         [ case model.newEvent.step of
-            NameStep ->
-                Html.form [ onSubmit IncrementStep ]
-                    [ input [ type_ "text", placeholder "Your name", value model.newEvent.name, onInput Name, required True, minlength 4, maxlength 20 ] []
-                    , input [ type_ "submit", value "Next" ] []
-                    , div [] (model.newEvent.errors
-                                  |> List.concatMap (\(_, errors) -> errors)
-                                  |> List.map (\err -> (span [] [text err])))
-                    ]
-
             OwnerStep ->
                 Html.form [ onSubmit IncrementStep ]
-                    [ input [ type_ "text", placeholder "Event name", value model.newEvent.owner, onInput Owner, required True, minlength 2, maxlength 30 ] []
+                    [ input [ type_ "text", placeholder "Your name", value model.newEvent.owner, onInput Owner, required True, minlength 4, maxlength 20 ] []
+                    , input [ type_ "submit", value "Next" ] []
+                    , div []
+                        (model.newEvent.errors
+                            |> List.concatMap (\( _, errors ) -> errors)
+                            |> List.map (\err -> (span [] [ text err ]))
+                        )
+                    ]
+
+            NameStep ->
+                Html.form [ onSubmit IncrementStep ]
+                    [ input [ type_ "text", placeholder "Event name", value model.newEvent.name, onInput Name, required True, minlength 2, maxlength 30 ] []
                     , input [ type_ "submit", value "Next" ] []
                     ]
 
@@ -148,7 +158,7 @@ updateNewEvent update m =
         updatedNewEvent =
             update m.newEvent
     in
-    { m | newEvent = updatedNewEvent }
+        { m | newEvent = updatedNewEvent }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -169,8 +179,8 @@ update msg model =
         CreateEvent ->
             ( model, postCreateEvent (bodyEncoder model.newEvent) )
 
-        CreateEventResponse (Result.Ok (header, _)) ->
-            ({model | token = Just header }, Cmd.none )
+        CreateEventResponse (Result.Ok ( header, _ )) ->
+            ( { model | token = Just header }, setLocalStorageItem ( "authToken", header ) )
 
         CreateEventResponse (Result.Err err) ->
             case err of
@@ -178,68 +188,88 @@ update msg model =
                     let
                         decodedResponse =
                             Decode.decodeString errorResponseDecoder badResponse.body
-                        updatedModel = {model | newEvent = initialNewEvent}
-                    in
-                    case decodedResponse of
-                        Ok serverErrors ->
-                            ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
 
-                        Err _ ->
-                            ( updatedModel, Cmd.none )
+                        updatedModel =
+                            { model | newEvent = initialNewEvent }
+                    in
+                        case decodedResponse of
+                            Ok serverErrors ->
+                                ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
+
+                            Err _ ->
+                                ( updatedModel, Cmd.none )
+
+                Http.BadPayload err _ ->
+                    (Debug.log ("BAD PAYLOAD ERROR" ++ err))
+                        ( model, Cmd.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    (Debug.log "ERROR")
+                        ( model, Cmd.none )
 
         UrlChange location ->
-            ({ model | route = getRoute location}, Cmd.none)
+            ( { model | route = getRoute location }, Cmd.none )
 
-        SayHello -> (model, getLocalStorageItem "hello")
+        SayHello ->
+            ( model, getLocalStorageItem "hello" )
 
 
-getRoute: Navigation.Location -> Route
+getRoute : Navigation.Location -> Route
 getRoute location =
     case location.hash of
-        "#create-event" -> NewEventPage
-        _ -> HomePage                       
+        "#create-event" ->
+            NewEventPage
 
-                        
+        _ ->
+            HomePage
+
+
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
-    ( {initialModel | route = getRoute location}
+    ( { initialModel | route = getRoute location }
     , Cmd.none
     )
 
 
 postCreateEvent : String -> Cmd Msg
 postCreateEvent encodedData =
-    Http.send CreateEventResponse <| 
-        getCreateEventRequest "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData)
-        -- Http.post "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData) responseDecoder
+    Http.send CreateEventResponse <|
+        getCreateEventRequest "http://localhost:3000/v1/events" (Http.stringBody "application/json" encodedData)
 
 
 getCreateEventRequest : String -> Http.Body -> Http.Request EventResponse
 getCreateEventRequest url body =
-  Http.request
-    { method = "POST"
-    , headers = []
-    , url = url
-    , body = body
-    , expect = Http.expectStringResponse (\r 
-        -> 
-        let 
-            header = extractHeader "authorization" r
-            body = Decode.decodeString responseDecoder r.body
-        in
-            case (header, body) of 
+    Http.request
+        { method = "POST"
+        , headers = []
+        , url = url
+        , body = body
+        , expect =
+            Http.expectStringResponse
+                (\r ->
+                    let
+                        header =
+                            extractHeader "authorization" r
 
-                (Just header, Ok body) -> Ok (header, body)
-                (Just _, Err error) -> Err error
-                (Nothing, Ok _) -> Err "No authorization header"
-                (Nothing, Err error) -> Err ("No authorization header, and " ++ error))
+                        body =
+                            Decode.decodeString responseDecoder r.body
+                    in
+                        case ( header, body ) of
+                            ( Just header, Ok body ) ->
+                                Ok ( header, body )
 
-    , timeout = Nothing
-    , withCredentials = False
-    }
+                            ( Just _, Err error ) ->
+                                Err error
+
+                            ( Nothing, Ok _ ) ->
+                                Err "No authorization header"
+
+                            ( Nothing, Err error ) ->
+                                Err ("No authorization header, and " ++ error)
+                )
+        , timeout = Nothing
+        , withCredentials = False
+        }
 
 
 bodyEncoder : { a | name : String, owner : String, endDateTime : String } -> String
@@ -256,7 +286,7 @@ bodyEncoder data =
                   )
                 ]
     in
-    Encode.encode 0 encodedValue
+        Encode.encode 0 encodedValue
 
 
 errorResponseDecoder : Decode.Decoder (List ServerError)
@@ -266,12 +296,14 @@ errorResponseDecoder =
 
 responseDecoder : Decode.Decoder Event
 responseDecoder =
-    Decode.map4
-        Event
-        (Decode.at [ "id" ] Decode.int)
-        (Decode.at [ "name" ] Decode.string)
-        (Decode.at [ "owner" ] Decode.string)
-        (Decode.at [ "end_date" ] Decode.string)
+    Decode.at [ "data" ]
+        (Decode.map4
+            Event
+            (Decode.at [ "id" ] Decode.int)
+            (Decode.at [ "name" ] Decode.string)
+            (Decode.at [ "owner" ] Decode.string)
+            (Decode.at [ "end_date" ] Decode.string)
+        )
 
 
 extractHeader : String -> Http.Response a -> Maybe String
@@ -279,7 +311,11 @@ extractHeader name response =
     Dict.get name response.headers
 
 
-port getLocalStorageItem: String -> Cmd msg
+port getLocalStorageItem : String -> Cmd msg
+
+
+port setLocalStorageItem : LocalStorageRecord -> Cmd msg
+
 
 main : Program Never Model Msg
 main =
