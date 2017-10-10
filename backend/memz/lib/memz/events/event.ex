@@ -1,12 +1,17 @@
+defmodule Memz.Events.Event.NameSlug do
+  use EctoAutoslugField.Slug, from: :name, to: :slug
+end
+
 defmodule Memz.Events.Event do
   use Ecto.Schema
   import Ecto.Changeset
   alias Memz.Events.Event
-
+  alias Memz.Events.Event.NameSlug
 
   schema "events" do
     field :end_date, :naive_datetime
     field :name, :string
+    field :slug, NameSlug.Type
     field :owner, :string
 
     timestamps()
@@ -20,6 +25,7 @@ defmodule Memz.Events.Event do
     |> validate_length(:name, min: 4, max: 20)
     |> validate_length(:owner, min: 2, max: 30)
     |> validate_date_in_future(:end_date)
+    |> NameSlug.maybe_generate_slug
   end
 
   def validate_date_in_future(changeset, field) do

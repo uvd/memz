@@ -22,6 +22,10 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Configures Guardian
+config :memz, MemzWeb.Guardian,
+       issuer: "MEMZ",
+       secret_key: "CyNQmG/EVQdO2MFxIKYVhjNV1SAZ/3Inn1fn5CnxJL8vmLe/5VyCR0MLunFk5e3R"
 
 if Mix.env == :dev do
   config :mix_test_watch,

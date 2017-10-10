@@ -11,6 +11,7 @@ defmodule MemzWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+#    plug Guardian.Plug.LoadResource
   end
 
   scope "/", MemzWeb do

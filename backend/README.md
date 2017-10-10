@@ -15,7 +15,7 @@ To run the tests:
 
 ```
 docker-compose -f docker-compose.test.yml up
-docker-compose exec elixir mix test
+docker-compose exec elixir bin/bash -c "MIX_ENV=test mix test"
 ```
 
 ## Debugging

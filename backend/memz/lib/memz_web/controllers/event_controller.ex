@@ -3,6 +3,7 @@ defmodule MemzWeb.EventController do
 
   alias Memz.Events
   alias Memz.Events.Event
+  alias MemzWeb.Guardian
 
   action_fallback MemzWeb.FallbackController
 
@@ -20,12 +21,16 @@ defmodule MemzWeb.EventController do
       end_date: Timex.parse!(end_date_time, "{ISO:Extended}")
     }
 
+    resource = %{:id => owner}
+
+    {:ok, token, _} = Guardian.encode_and_sign(resource)
+
     with {:ok, %Event{} = event} <- Events.create_event(event_params) do
       conn
+      |> put_resp_header("authorization", token)
       |> put_status(:created)
       |> render("show.json", event: event)
     end
   end
-
 
 end

@@ -2,9 +2,10 @@ defmodule MemzWeb.EventControllerTest do
   use MemzWeb.ConnCase
 
   alias Memz.Events
+  alias Plug.Conn
+  alias MemzWeb.Guardian
 
-  @create_attrs %{end_date: "2017-11-10T01:00", name: "some name", owner: "some owner"}
-  @invalid_name_attrs %{end_date: "2017-11-10T01:00", name: "s", owner: "some owner"}
+  @create_attrs %{end_date: "2017-11-10T01:00", name: "SomE NAME", owner: "some owner"}
   @invalid_name_attrs %{end_date: "2017-11-10T01:00", name: "s", owner: "some owner"}
 
   def fixture(:event) do
@@ -25,7 +26,8 @@ defmodule MemzWeb.EventControllerTest do
       assert json_response(conn, 201)["data"] == %{
         "id" => id,
         "end_date" => "2017-11-10T01:00:00",
-        "name" => "some name",
+        "name" => "SomE NAME",
+        "slug" => "some-name",
         "owner" => "some owner"}
     end
 
@@ -35,5 +37,22 @@ defmodule MemzWeb.EventControllerTest do
           "name" => ["should be at least 4 character(s)"]
       }
     end
+
+    test "does not return authorization header when data is not valid",  %{conn: conn} do
+      conn = post conn, event_path(conn, :create), event: @invalid_name_attrs
+      assert Conn.get_resp_header(conn, "authorization") |> length == 0
+    end
+
+    test "returns authorization header when data is valid", %{conn: conn} do
+      
+      conn = post conn, event_path(conn, :create), event: @create_attrs
+      [token] = Conn.get_resp_header(conn, "authorization")
+      {:ok, resource, claims} = Guardian.resource_from_token(token)
+      %{"sub" => owner} = claims
+      assert owner == "some owner"
+
+    end
+
+
   end
 end

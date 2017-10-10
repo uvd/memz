@@ -12,6 +12,7 @@ defmodule MemzWeb.EventView do
 
   def render("event.json", %{event: event}) do
     %{id: event.id,
+      slug: event.slug,
       name: event.name,
       owner: event.owner,
       end_date: event.end_date}
