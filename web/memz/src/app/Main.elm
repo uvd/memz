@@ -188,17 +188,19 @@ update msg model =
                     ( model, Cmd.none )
 
         UrlChange location ->
-            case location.hash of
-                "#create-event" ->
-                    ( { model | route = NewEventPage }, Cmd.none )
-
-                _ ->
-                    ( { model | route = HomePage }, Cmd.none )
+            ({ model | route = getRoute location}, Cmd.none)
 
 
+getRoute: Navigation.Location -> Route
+getRoute location =
+    case location.hash of
+        "#create-event" -> NewEventPage
+        _ -> HomePage                       
+
+                        
 init : Navigation.Location -> ( Model, Cmd Msg )
-init _ =
-    ( initialModel
+init location =
+    ( {initialModel | route = getRoute location}
     , Cmd.none
     )
 
