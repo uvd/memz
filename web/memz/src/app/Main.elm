@@ -1,10 +1,10 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Date exposing (..)
 import Debug exposing (log)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput, onSubmit)
+import Html.Events exposing (onInput, onSubmit, onClick)
 import Http exposing (Error)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -63,6 +63,7 @@ type Msg
     | CreateEvent
     | CreateEventResponse (Result Http.Error EventResponse)
     | UrlChange Navigation.Location
+    | SayHello
 
 
 initialNewEvent : NewEvent
@@ -192,6 +193,8 @@ update msg model =
         UrlChange location ->
             ({ model | route = getRoute location}, Cmd.none)
 
+        SayHello -> (model, getLocalStorageItem "hello")
+
 
 getRoute: Navigation.Location -> Route
 getRoute location =
@@ -274,6 +277,9 @@ responseDecoder =
 extractHeader : String -> Http.Response a -> Maybe String
 extractHeader name response =
     Dict.get name response.headers
+
+
+port getLocalStorageItem: String -> Cmd msg
 
 main : Program Never Model Msg
 main =
