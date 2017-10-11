@@ -17,6 +17,8 @@ defmodule MemzWeb.Router do
   pipeline :authenticated do
     plug Guardian.Plug.Pipeline, module: MemzWeb.Guardian,
                                  error_handler: MemzWeb.AuthErrorHandler
+
+    plug Guardian.Plug.VerifyHeader, realm: "Bearer"
     plug Guardian.Plug.EnsureAuthenticated
   end
 

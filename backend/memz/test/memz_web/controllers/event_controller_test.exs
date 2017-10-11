@@ -65,15 +65,26 @@ defmodule MemzWeb.EventControllerTest do
 
     test "should return a 200 response when the authorization header is set", %{conn: conn} do
 
-      resource = %{:id => "Bob"}
+      conn = post conn, event_path(conn, :create), event: @create_attrs
+      [token] = Conn.get_resp_header(conn, "authorization")
 
-      conn = Guardian.Plug.sign_in(conn, resource)
 
-#      conn
-#        |> put_req_header("authorization", token)
+      token = "Bearer " <> token
+      IO.inspect event_path(conn, :create)
+      IO.inspect event_path(conn, :show, 1)
+      IO.inspect token
 
-      conn = get conn, event_path(conn, :show, 1)
-      assert conn.status == 200
+
+      #      resource = %{:id => "some owner"}
+#      {:ok, token, _} = Guardian.encode_and_sign(resource)
+
+      new_conn = build_conn()
+      new_conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", token)
+
+      new_conn = get new_conn, event_path(new_conn, :show, 1)
+      assert new_conn.status == 200
 
     end
 

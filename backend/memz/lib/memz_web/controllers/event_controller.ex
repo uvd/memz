@@ -23,10 +23,11 @@ defmodule MemzWeb.EventController do
 
     resource = %{:id => owner}
 
+    {:ok, token, _} = Guardian.encode_and_sign(resource)
+
     with {:ok, %Event{} = event} <- Events.create_event(event_params) do
       conn
-      |> Guardian.Plug.sign_in( resource)
-#      |> put_resp_header("authorization", token)
+      |> put_resp_header("authorization", token)
       |> put_status(:created)
       |> render("show.json", event: event)
     end
@@ -35,7 +36,7 @@ defmodule MemzWeb.EventController do
   def show(conn, _params) do
     conn
     |> put_status(:ok)
-    |> text("Unauthorized access")
+    |> text("Okie dokie")
     |> halt()
   end
 
