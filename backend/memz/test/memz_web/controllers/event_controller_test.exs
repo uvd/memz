@@ -55,7 +55,7 @@ defmodule MemzWeb.EventControllerTest do
 #  end
 
   describe "show event" do
-    test "should return a 401 response when the authroiazation header is not set", %{conn: conn} do
+    test "should return a 401 response when the authorization header is not set", %{conn: conn} do
 
       conn = get conn, event_path(conn, :show, 1)
       assert conn.status == 401
@@ -63,7 +63,7 @@ defmodule MemzWeb.EventControllerTest do
       assert conn.halted == true
     end
 
-    test "should return a 200 response when the authroiazation header is set", %{conn: conn} do
+    test "should return a 200 response when the authorization header is set", %{conn: conn} do
 
       resource = %{:id => "Bob"}
 
