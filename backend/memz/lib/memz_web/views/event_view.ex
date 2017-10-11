@@ -14,7 +14,7 @@ defmodule MemzWeb.EventView do
     %{id: event.id,
       slug: event.slug,
       name: event.name,
-      owner: event.owner,
+      owner: event.user.name,
       end_date: event.end_date}
   end
 end
