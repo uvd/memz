@@ -1,17 +1,23 @@
 module Model exposing (..)
 
+import Messages exposing (Event)
+
 
 type Route
     = HomePageRoute
     | CreateEventRoute
-      
+    | EventRoute Int String
+
+
 type Step
     = OwnerStep
     | NameStep
     | EndDateTimeStep
-      
+
+
 type alias ServerError =
     ( String, List String )
+
 
 type alias NewEvent =
     { name : String
@@ -26,6 +32,7 @@ type alias Model =
     { newEvent : NewEvent
     , route : Route
     , token : Maybe String
+    , event : Maybe Messages.Event
     }
 
 
@@ -38,9 +45,11 @@ initialNewEvent =
     , errors = []
     }
 
+
 initialModel : Model
 initialModel =
     { newEvent = initialNewEvent
     , route = HomePageRoute
     , token = Nothing
+    , event = Nothing
     }

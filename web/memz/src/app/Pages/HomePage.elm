@@ -9,5 +9,5 @@ view : Html Msg
 view =
     div []
         [ p [] [ text "Long term memories made in real time" ]
-        , a [ href "#create-event" ] [ text "Create an event" ]
+        , a [ href "#/create-event" ] [ text "Create an event" ]
         ]

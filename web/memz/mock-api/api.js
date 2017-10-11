@@ -15,7 +15,7 @@ server.use(authHeader);
 //In this example we simulate a server side error response
 router.render = (req, res) => {
     res.setHeader('Access-Control-Expose-Headers', 'Location, Authorization')
-    res.status(201).jsonp({"data":{"owner":"James","name":"Hack week","id":2,"end_date":"2017-10-12T01:03:00"}})
+    res.status(200).jsonp({"data":{"owner":"James","name":"Hack week","id":2, "slug": "hack-week", "end_date":"2017-10-12T01:03:00"}})
   }
 
 

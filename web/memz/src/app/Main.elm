@@ -13,6 +13,8 @@ import Model exposing (Model, NewEvent, Route, ServerError, Step, initialModel, 
 import Navigation
 import Pages.CreateEventPage as CreateEventPage
 import Pages.HomePage as HomePage
+import Pages.EventPage as EventPage
+import UrlParser exposing (Parser, (</>), s, int, string, map, oneOf, parseHash)
 
 
 type alias LocalStorageRecord =
@@ -41,6 +43,9 @@ view model =
         Model.CreateEventRoute ->
             CreateEventPage.view model
 
+        Model.EventRoute id slug ->
+            EventPage.view
+
 
 updateNewEvent : (NewEvent -> NewEvent) -> Model -> Model
 updateNewEvent update m =
@@ -48,7 +53,7 @@ updateNewEvent update m =
         updatedNewEvent =
             update m.newEvent
     in
-    { m | newEvent = updatedNewEvent }
+        { m | newEvent = updatedNewEvent }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -82,12 +87,12 @@ update msg model =
                         updatedModel =
                             { model | newEvent = initialNewEvent }
                     in
-                    case decodedResponse of
-                        Ok serverErrors ->
-                            ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
+                        case decodedResponse of
+                            Ok serverErrors ->
+                                ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
 
-                        Err _ ->
-                            ( updatedModel, Cmd.none )
+                            Err _ ->
+                                ( updatedModel, Cmd.none )
 
                 Http.BadPayload err _ ->
                     Debug.log ("BAD PAYLOAD ERROR" ++ err)
@@ -97,25 +102,64 @@ update msg model =
                     Debug.log "ERROR"
                         ( model, Cmd.none )
 
+        Messages.GetEventResponse (Result.Ok response) ->
+            ( { model | event = Just response }, Cmd.none )
+
+        Messages.GetEventResponse (Result.Err err) ->
+            --@TODO
+            ( model, Cmd.none )
+
         Messages.UrlChange location ->
-            ( { model | route = getRoute location }, Cmd.none )
+            onLocationChange model location
+
+
+commandForRoute : Route -> Cmd Msg
+commandForRoute r =
+    case r of
+        Model.EventRoute id slug ->
+            getRequestForEvent id slug
+
+        _ ->
+            Cmd.none
+
+
+getRequestForEvent : Int -> String -> Cmd Msg
+getRequestForEvent id slug =
+    let
+        url =
+            "http://localhost:3000/v1/event/" ++ (toString id) ++ "/" ++ slug
+
+        request =
+            Http.get url responseDecoder
+    in
+        Http.send Messages.GetEventResponse request
 
 
 getRoute : Navigation.Location -> Route
 getRoute location =
-    case location.hash of
-        "#create-event" ->
-            Model.CreateEventRoute
+    case parseHash route location of
+        Just route ->
+            route
 
         _ ->
             Model.HomePageRoute
 
 
-init : Navigation.Location -> ( Model, Cmd Msg )
-init location =
-    ( { initialModel | route = getRoute location }
-    , Cmd.none
-    )
+route : Parser (Route -> a) a
+route =
+    oneOf
+        [ UrlParser.map Model.EventRoute (UrlParser.s "event" </> int </> string)
+        , UrlParser.map Model.CreateEventRoute (UrlParser.s "create-event")
+        ]
+
+
+onLocationChange : Model -> Navigation.Location -> ( Model, Cmd Msg )
+onLocationChange model location =
+    let
+        newRoute =
+            getRoute location
+    in
+        ( { model | route = newRoute }, commandForRoute newRoute )
 
 
 postCreateEvent : String -> Cmd Msg
@@ -141,18 +185,18 @@ getCreateEventRequest url body =
                         body =
                             Decode.decodeString responseDecoder r.body
                     in
-                    case ( header, body ) of
-                        ( Just header, Ok body ) ->
-                            Ok ( header, body )
+                        case ( header, body ) of
+                            ( Just header, Ok body ) ->
+                                Ok ( header, body )
 
-                        ( Just _, Err error ) ->
-                            Err error
+                            ( Just _, Err error ) ->
+                                Err error
 
-                        ( Nothing, Ok _ ) ->
-                            Err "No authorization header"
+                            ( Nothing, Ok _ ) ->
+                                Err "No authorization header"
 
-                        ( Nothing, Err error ) ->
-                            Err ("No authorization header, and " ++ error)
+                            ( Nothing, Err error ) ->
+                                Err ("No authorization header, and " ++ error)
                 )
         , timeout = Nothing
         , withCredentials = False
@@ -173,7 +217,7 @@ bodyEncoder data =
                   )
                 ]
     in
-    Encode.encode 0 encodedValue
+        Encode.encode 0 encodedValue
 
 
 errorResponseDecoder : Decode.Decoder (List ServerError)
@@ -208,7 +252,7 @@ port setLocalStorageItem : LocalStorageRecord -> Cmd msg
 main : Program Never Model Msg
 main =
     Navigation.program Messages.UrlChange
-        { init = init
+        { init = onLocationChange Model.initialModel
         , view = view
         , update = update
         , subscriptions = always Sub.none

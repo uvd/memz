@@ -1,6 +1,8 @@
 module Messages exposing (..)
+
 import Navigation
 import Http
+
 
 type alias Event =
     { id : Int
@@ -14,6 +16,7 @@ type alias Event =
 type alias EventResponse =
     ( String, Event )
 
+
 type Msg
     = Name String
     | Owner String
@@ -22,3 +25,4 @@ type Msg
     | CreateEvent
     | CreateEventResponse (Result Http.Error EventResponse)
     | UrlChange Navigation.Location
+    | GetEventResponse (Result Http.Error Event)
