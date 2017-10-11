@@ -13,9 +13,9 @@ import Messages exposing (Event, EventResponse, Msg)
 import Model exposing (..)
 import Navigation
 import Pages.CreateEventPage as CreateEventPage
-import Pages.HomePage as HomePage
 import Pages.EventPage as EventPage
-import UrlParser exposing (Parser, (</>), s, int, string, map, oneOf, parseHash)
+import Pages.HomePage as HomePage
+import UrlParser exposing ((</>), Parser, int, map, oneOf, parseHash, s, string)
 
 
 type alias LocalStorageRecord =
@@ -54,7 +54,7 @@ updateNewEvent update m =
         updatedNewEvent =
             update m.newEvent
     in
-        { m | newEvent = updatedNewEvent }
+    { m | newEvent = updatedNewEvent }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -88,12 +88,12 @@ update msg model =
                         updatedModel =
                             { model | newEvent = initialNewEvent }
                     in
-                        case decodedResponse of
-                            Ok serverErrors ->
-                                ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
+                    case decodedResponse of
+                        Ok serverErrors ->
+                            ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
 
-                            Err _ ->
-                                ( updatedModel, Cmd.none )
+                        Err _ ->
+                            ( updatedModel, Cmd.none )
 
                 Http.BadPayload err _ ->
                     Debug.log ("BAD PAYLOAD ERROR" ++ err)
@@ -113,8 +113,18 @@ update msg model =
         Messages.UrlChange location ->
             onLocationChange model location
 
-        Messages.LocalStorageResponse ( key, value ) ->
-            ( { model | token = Just value }, Cmd.none )
+        Messages.LocalStorageResponse ( "authToken", value ) ->
+            ( { model | token = value }
+            , case value of
+                Just token ->
+                    commandForRoute model.route value
+
+                Nothing ->
+                    Debug.log "Redirect" <| Navigation.newUrl "/"
+            )
+
+        Messages.LocalStorageResponse _ ->
+            ( model, Cmd.none )
 
 
 commandForRoute : Route -> Maybe String -> Cmd Msg
@@ -136,12 +146,12 @@ getRequestForEvent : Int -> String -> String -> Cmd Msg
 getRequestForEvent id slug token =
     let
         url =
-            "http://localhost:3000/v1/event/" ++ (toString id) ++ "/" ++ slug
+            "http://localhost:3000/v1/event/" ++ toString id ++ "/" ++ slug
     in
-        HttpBuilder.get url
-            |> withHeader "authorisation" token
-            |> withExpect (Http.expectJson responseDecoder)
-            |> send Messages.GetEventResponse
+    HttpBuilder.get url
+        |> withHeader "authorisation" token
+        |> withExpect (Http.expectJson responseDecoder)
+        |> send Messages.GetEventResponse
 
 
 getRoute : Navigation.Location -> Route
@@ -157,7 +167,7 @@ getRoute location =
 route : Parser (Route -> a) a
 route =
     oneOf
-        [ UrlParser.map (\id slug -> (EventRoute id slug) |> Private) (UrlParser.s "event" </> int </> string)
+        [ UrlParser.map (\id slug -> Private (EventRoute id slug)) (UrlParser.s "event" </> int </> string)
         , UrlParser.map (Private CreateEventRoute) (UrlParser.s "create-event")
         ]
 
@@ -168,15 +178,15 @@ onLocationChange model location =
         newRoute =
             getRoute location
     in
-        case ( newRoute, model.token ) of
-            ( Public r, _ ) ->
-                ( { model | route = newRoute }, (commandForRoute newRoute model.token) )
+    case ( newRoute, model.token ) of
+        ( Public r, _ ) ->
+            ( { model | route = newRoute }, commandForRoute newRoute model.token )
 
-            ( Private r, Just token ) ->
-                ( { model | route = newRoute }, (commandForRoute newRoute model.token) )
+        ( Private r, Just token ) ->
+            ( { model | route = newRoute }, commandForRoute newRoute model.token )
 
-            ( Private r, Nothing ) ->
-                ( { model | route = newRoute }, commandForAuthToken )
+        ( Private r, Nothing ) ->
+            ( { model | route = newRoute }, commandForAuthToken )
 
 
 commandForAuthToken : Cmd Msg
@@ -207,18 +217,18 @@ getCreateEventRequest url body =
                         body =
                             Decode.decodeString responseDecoder r.body
                     in
-                        case ( header, body ) of
-                            ( Just header, Ok body ) ->
-                                Ok ( header, body )
+                    case ( header, body ) of
+                        ( Just header, Ok body ) ->
+                            Ok ( header, body )
 
-                            ( Just _, Err error ) ->
-                                Err error
+                        ( Just _, Err error ) ->
+                            Err error
 
-                            ( Nothing, Ok _ ) ->
-                                Err "No authorization header"
+                        ( Nothing, Ok _ ) ->
+                            Err "No authorization header"
 
-                            ( Nothing, Err error ) ->
-                                Err ("No authorization header, and " ++ error)
+                        ( Nothing, Err error ) ->
+                            Err ("No authorization header, and " ++ error)
                 )
         , timeout = Nothing
         , withCredentials = False
@@ -239,7 +249,7 @@ bodyEncoder data =
                   )
                 ]
     in
-        Encode.encode 0 encodedValue
+    Encode.encode 0 encodedValue
 
 
 errorResponseDecoder : Decode.Decoder (List ServerError)
@@ -268,7 +278,7 @@ extractHeader name response =
 port getLocalStorageItem : String -> Cmd msg
 
 
-port getLocalStorageItemResponse : (( String, String ) -> msg) -> Sub msg
+port getLocalStorageItemResponse : (( String, Maybe String ) -> msg) -> Sub msg
 
 
 port setLocalStorageItem : LocalStorageRecord -> Cmd msg

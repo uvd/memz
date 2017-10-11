@@ -26,4 +26,4 @@ type Msg
     | CreateEventResponse (Result Http.Error EventResponse)
     | UrlChange Navigation.Location
     | GetEventResponse (Result Http.Error Event)
-    | LocalStorageResponse ( String, String )
+    | LocalStorageResponse ( String, Maybe String )
