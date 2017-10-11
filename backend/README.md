@@ -31,3 +31,11 @@ To recompile without exiting, run the following inside the Elixir shell:
 ```
 recompile()
 ```
+
+Example of using iex to test a controller. Run the following in the Elixir shell:
+
+```
+event_data = %{"name" => "UVD Hack Time", "owner" => "Ryan", "end_date" =>"2017-12-10T01:00"}
+conn = Phoenix.ConnTest.build_conn()
+MemzWeb.EventController.create(conn, %{"event" => event_data})
+```
