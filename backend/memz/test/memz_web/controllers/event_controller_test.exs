@@ -70,7 +70,7 @@ defmodule MemzWeb.EventControllerTest do
       [token] = Conn.get_resp_header(conn, "authorization")
       [token|_] = token |> String.split(" ") |> Enum.reverse
 
-      {:ok, resource, claims} = Guardian.resource_from_token(token)
+      {:ok, _, claims} = Guardian.resource_from_token(token)
       %{"sub" => owner} = claims
 
       created_user = Repo.get_by!(User, name: create_attrs.owner)

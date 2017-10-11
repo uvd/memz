@@ -8,8 +8,6 @@ defmodule Memz.EventsTest do
   describe "events" do
     alias Memz.Events.Event
 
-    @valid_user %{id: 1, name: "Bob"}
-
     @valid_attrs %{end_date: ~N[2020-04-17 14:00:00.000000], name: "some name"}
     @invalid_attrs %{end_date: nil, name: nil, owner: nil}
 
