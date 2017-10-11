@@ -6,10 +6,11 @@ import Dict exposing (get)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http exposing (Error)
+import HttpBuilder exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Messages exposing (Event, EventResponse, Msg)
-import Model exposing (Model, NewEvent, Route, ServerError, Step, initialModel, initialNewEvent)
+import Model exposing (..)
 import Navigation
 import Pages.CreateEventPage as CreateEventPage
 import Pages.HomePage as HomePage
@@ -37,13 +38,13 @@ incrementCurrentStep step =
 view : Model -> Html Msg
 view model =
     case model.route of
-        Model.HomePageRoute ->
+        Public HomePageRoute ->
             HomePage.view
 
-        Model.CreateEventRoute ->
+        Private CreateEventRoute ->
             CreateEventPage.view model
 
-        Model.EventRoute id slug ->
+        Private (EventRoute id slug) ->
             EventPage.view
 
 
@@ -112,27 +113,35 @@ update msg model =
         Messages.UrlChange location ->
             onLocationChange model location
 
+        Messages.LocalStorageResponse ( key, value ) ->
+            ( { model | token = Just value }, Cmd.none )
 
-commandForRoute : Route -> Cmd Msg
-commandForRoute r =
-    case r of
-        Model.EventRoute id slug ->
-            getRequestForEvent id slug
+
+commandForRoute : Route -> Maybe String -> Cmd Msg
+commandForRoute route token =
+    case route of
+        Private (EventRoute id slug) ->
+            case token of
+                Just token ->
+                    getRequestForEvent id slug token
+
+                Nothing ->
+                    Cmd.none
 
         _ ->
             Cmd.none
 
 
-getRequestForEvent : Int -> String -> Cmd Msg
-getRequestForEvent id slug =
+getRequestForEvent : Int -> String -> String -> Cmd Msg
+getRequestForEvent id slug token =
     let
         url =
             "http://localhost:3000/v1/event/" ++ (toString id) ++ "/" ++ slug
-
-        request =
-            Http.get url responseDecoder
     in
-        Http.send Messages.GetEventResponse request
+        HttpBuilder.get url
+            |> withHeader "authorisation" token
+            |> withExpect (Http.expectJson responseDecoder)
+            |> send Messages.GetEventResponse
 
 
 getRoute : Navigation.Location -> Route
@@ -142,14 +151,14 @@ getRoute location =
             route
 
         _ ->
-            Model.HomePageRoute
+            Public HomePageRoute
 
 
 route : Parser (Route -> a) a
 route =
     oneOf
-        [ UrlParser.map Model.EventRoute (UrlParser.s "event" </> int </> string)
-        , UrlParser.map Model.CreateEventRoute (UrlParser.s "create-event")
+        [ UrlParser.map (\id slug -> (EventRoute id slug) |> Private) (UrlParser.s "event" </> int </> string)
+        , UrlParser.map (Private CreateEventRoute) (UrlParser.s "create-event")
         ]
 
 
@@ -159,7 +168,20 @@ onLocationChange model location =
         newRoute =
             getRoute location
     in
-        ( { model | route = newRoute }, commandForRoute newRoute )
+        case ( newRoute, model.token ) of
+            ( Public r, _ ) ->
+                ( { model | route = newRoute }, (commandForRoute newRoute model.token) )
+
+            ( Private r, Just token ) ->
+                ( { model | route = newRoute }, (commandForRoute newRoute model.token) )
+
+            ( Private r, Nothing ) ->
+                ( { model | route = newRoute }, commandForAuthToken )
+
+
+commandForAuthToken : Cmd Msg
+commandForAuthToken =
+    getLocalStorageItem "authToken"
 
 
 postCreateEvent : String -> Cmd Msg
@@ -246,7 +268,15 @@ extractHeader name response =
 port getLocalStorageItem : String -> Cmd msg
 
 
+port getLocalStorageItemResponse : (( String, String ) -> msg) -> Sub msg
+
+
 port setLocalStorageItem : LocalStorageRecord -> Cmd msg
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    getLocalStorageItemResponse Messages.LocalStorageResponse
 
 
 main : Program Never Model Msg
@@ -255,5 +285,5 @@ main =
         { init = onLocationChange Model.initialModel
         , view = view
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }

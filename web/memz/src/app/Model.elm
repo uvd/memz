@@ -3,10 +3,18 @@ module Model exposing (..)
 import Messages exposing (Event)
 
 
-type Route
+type PublicRoute
     = HomePageRoute
-    | CreateEventRoute
+
+
+type PrivateRoute
+    = CreateEventRoute
     | EventRoute Int String
+
+
+type Route
+    = Public PublicRoute
+    | Private PrivateRoute
 
 
 type Step
@@ -36,6 +44,11 @@ type alias Model =
     }
 
 
+toRoute : Route -> Route
+toRoute r =
+    r
+
+
 initialNewEvent : NewEvent
 initialNewEvent =
     { name = ""
@@ -49,7 +62,7 @@ initialNewEvent =
 initialModel : Model
 initialModel =
     { newEvent = initialNewEvent
-    , route = HomePageRoute
+    , route = Public HomePageRoute
     , token = Nothing
     , event = Nothing
     }
