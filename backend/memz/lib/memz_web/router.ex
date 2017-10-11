@@ -14,6 +14,12 @@ defmodule MemzWeb.Router do
 #    plug Guardian.Plug.LoadResource
   end
 
+  pipeline :authenticated do
+    plug Guardian.Plug.Pipeline, module: MemzWeb.Guardian,
+                                 error_handler: MemzWeb.AuthErrorHandler
+    plug Guardian.Plug.EnsureAuthenticated
+  end
+
   scope "/", MemzWeb do
     pipe_through :browser # Use the default browser stack
 
@@ -26,4 +32,12 @@ defmodule MemzWeb.Router do
 
      resources "/events", EventController, only: [:create]
    end
+
+  # Other scopes may use custom stacks.
+  scope "/v1", MemzWeb do
+    pipe_through [:api, :authenticated]
+
+    resources "/events", EventController, only: [:show]
+  end
+
 end

@@ -24,8 +24,9 @@ config :logger, :console,
 
 # Configures Guardian
 config :memz, MemzWeb.Guardian,
-       issuer: "MEMZ",
-       secret_key: "CyNQmG/EVQdO2MFxIKYVhjNV1SAZ/3Inn1fn5CnxJL8vmLe/5VyCR0MLunFk5e3R"
+  issuer: "MEMZ",
+  secret_key: "CyNQmG/EVQdO2MFxIKYVhjNV1SAZ/3Inn1fn5CnxJL8vmLe/5VyCR0MLunFk5e3R",
+  error_handler: MemzWeb.ErrorHandler
 
 config :cors_plug,
        expose: ["Authorization"]
