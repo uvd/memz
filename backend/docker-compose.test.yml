@@ -2,13 +2,13 @@ version: '3'
 
 services:
 
-  elixir:
+  elixir_test:
     build: ./
-    command: sh -c "mix ecto.setup; mix test.watch"
+    command: sh -c "MIX_ENV=test; mix ecto.setup; mix test.watch"
     working_dir: /app/memz
     environment:
       - MIX_ENV=test
-      - PORT=4000
+      - PORT=4001
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_DB=memz
@@ -16,17 +16,17 @@ services:
     volumes:
       - ./:/app
     ports:
-      - "4000:4000"
+      - "4001:4001"
     links:
-      - postgres
+      - postgres_test
     depends_on:
-      - postgres
+      - postgres_test
 
-  postgres:
+  postgres_test:
     image: postgres:9.6
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=memz
+      - POSTGRES_DB=memz_test
     ports:
-      - "32783:5432"
+      - "32784:5432"

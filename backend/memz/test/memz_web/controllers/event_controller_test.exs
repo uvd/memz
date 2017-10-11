@@ -12,6 +12,7 @@ defmodule MemzWeb.EventControllerTest do
 
   @create_attrs %{end_date: "2017-11-10T01:00", name: "SomE NAME", owner: "some owner"}
   @invalid_name_attrs %{end_date: "2017-11-10T01:00", name: "s", owner: "some owner"}
+  @invalid_owner_attrs %{end_date: "2017-11-10T01:00", name: "s", owner: "a"}
 
   def fixture(:event) do
     {:ok, event} = Events.create_event(@create_attrs)
@@ -43,6 +44,14 @@ defmodule MemzWeb.EventControllerTest do
       }
     end
 
+
+    test "renders error response when the owner is invalid", %{conn: conn} do
+      conn = post conn, event_path(conn, :create), event: @invalid_owner_attrs
+      assert json_response(conn, 400)["errors"] == %{
+               "owner" => ["should be at least 2 character(s)"]
+             }
+    end
+
     test "does not return authorization header when data is not valid",  %{conn: conn} do
       conn = post conn, event_path(conn, :create), event: @invalid_name_attrs
       assert Conn.get_resp_header(conn, "authorization") |> length == 0
@@ -64,9 +73,9 @@ defmodule MemzWeb.EventControllerTest do
       {:ok, resource, claims} = Guardian.resource_from_token(token)
       %{"sub" => owner} = claims
 
-      created_event = Repo.get_by!(User, name: create_attrs.owner)
+      created_user = Repo.get_by!(User, name: create_attrs.owner)
 
-      assert owner == Integer.to_string(created_event.id)
+      assert owner == Integer.to_string(created_user.id)
 
     end
   end

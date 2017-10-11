@@ -25,14 +25,6 @@ defmodule Memz.Accounts do
     |> User.changeset(attrs)
     |> Repo.insert()
 
-#
-#    case res do
-#      {:error, changset} ->
-#        {:error, changeset}
-#
-#      {:ok, user} ->
-#        {:ok, user}
-#    end
 
   end
 
