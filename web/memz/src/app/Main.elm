@@ -1,6 +1,6 @@
 port module Main exposing (..)
 
-import Date exposing (..)
+import Phoenix.Socket
 import Debug exposing (log)
 import Dict exposing (get)
 import Html exposing (..)
@@ -16,6 +16,7 @@ import Pages.CreateEventPage as CreateEventPage
 import Pages.EventPage as EventPage
 import Pages.HomePage as HomePage
 import UrlParser exposing ((</>), Parser, int, map, oneOf, parseHash, s, string)
+import Data.Event exposing (..)
 
 
 type alias LocalStorageRecord =
@@ -111,8 +112,8 @@ update msg model =
             ( { model | event = Just response }, Cmd.none )
 
         Messages.GetEventResponse (Result.Err err) ->
-            --@TODO
-            ( model, Cmd.none )
+            Debug.log "Error getting event"
+                ( model, Cmd.none )
 
         Messages.UrlChange location ->
             onLocationChange model location
@@ -128,6 +129,9 @@ update msg model =
             )
 
         Messages.LocalStorageResponse _ ->
+            ( model, Cmd.none )
+
+        Messages.PhoenixMsg _ ->
             ( model, Cmd.none )
 
 
@@ -154,7 +158,7 @@ getRequestForEvent id slug token =
     in
         HttpBuilder.get url
             |> withHeader "Authorization" token
-            |> withExpect (Http.expectJson responseDecoder)
+            |> withExpect (Http.expectJson Data.Event.decoder)
             |> send Messages.GetEventResponse
 
 
@@ -219,7 +223,7 @@ getCreateEventRequest url body =
                             extractHeader "authorization" r
 
                         body =
-                            Decode.decodeString responseDecoder r.body
+                            Decode.decodeString Data.Event.decoder r.body
                     in
                         case ( header, body ) of
                             ( Just header, Ok body ) ->
@@ -261,19 +265,6 @@ errorResponseDecoder =
     Decode.at [ "errors" ] (Decode.keyValuePairs (Decode.list Decode.string))
 
 
-responseDecoder : Decode.Decoder Event
-responseDecoder =
-    Decode.at [ "data" ]
-        (Decode.map5
-            Event
-            (Decode.at [ "id" ] Decode.int)
-            (Decode.at [ "name" ] Decode.string)
-            (Decode.at [ "owner" ] Decode.string)
-            (Decode.at [ "end_date" ] Decode.string)
-            (Decode.at [ "slug" ] Decode.string)
-        )
-
-
 extractHeader : String -> Http.Response a -> Maybe String
 extractHeader name response =
     Dict.get name response.headers
@@ -290,7 +281,10 @@ port setLocalStorageItem : LocalStorageRecord -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    getLocalStorageItemResponse Messages.LocalStorageResponse
+    Sub.batch
+        [ getLocalStorageItemResponse Messages.LocalStorageResponse
+        , Phoenix.Socket.listen model.phxSocket Messages.PhoenixMsg
+        ]
 
 
 main : Program Never Model Msg

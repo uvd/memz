@@ -2,7 +2,8 @@ module Messages exposing (..)
 
 import Navigation
 import Http
-import Model exposing (..)
+import Data.Event exposing (..)
+import Phoenix.Socket
 
 
 type alias EventResponse =
@@ -19,3 +20,4 @@ type Msg
     | UrlChange Navigation.Location
     | GetEventResponse (Result Http.Error Event)
     | LocalStorageResponse ( String, Maybe String )
+    | PhoenixMsg (Phoenix.Socket.Msg Msg)
