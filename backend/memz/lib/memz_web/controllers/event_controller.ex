@@ -27,13 +27,14 @@ defmodule MemzWeb.EventController do
 
     with {:ok, %Event{} = event} <- Events.create_event(event_params) do
       conn
-      |> put_resp_header("authorization", token)
+      |> put_resp_header("authorization", "Bearer " <> token)
       |> put_status(:created)
       |> render("show.json", event: event)
     end
   end
 
   def show(conn, _params) do
+
     conn
     |> put_status(:ok)
     |> text("Okie dokie")
