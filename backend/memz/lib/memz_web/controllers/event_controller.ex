@@ -24,17 +24,26 @@ defmodule MemzWeb.EventController do
       end_date: Timex.parse!(end_date_time, "{ISO:Extended}")
     }
 
-    with {:ok, %User{} = user } <- Accounts.create_user(%{ "name": owner }),
-         {:ok, token, _} <- Guardian.encode_and_sign(user),
-         {:ok, %Event{} = event} <- Events.create_event(user, event_params) do
+    with {:ok, %User{} = user } <- Accounts.create_user(%{ "name": owner }) do
 
-      Repo.preload(event, :user)
+      with {:ok, token, _} <- Guardian.encode_and_sign(user),
+           {:ok, %Event{} = event} <- Events.create_event(Map.put(event_params, :user_id, user.id)) do
 
-      conn
-          |> put_resp_header("authorization", "Bearer " <> token)
-          |> put_status(:created)
-          |> render("show.json", event: event)
+        event = Repo.preload(event, :user)
+
+        conn
+        |> put_resp_header("authorization", "Bearer " <> token)
+        |> put_status(:created)
+        |> render("show.json", event: event)
+      end
+
+
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+          {:error, {changeset | errors = changeset.errors }}
     end
+
+
 
   end
 

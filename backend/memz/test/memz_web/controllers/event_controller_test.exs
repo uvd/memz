@@ -3,8 +3,12 @@ defmodule MemzWeb.EventControllerTest do
 
   alias Memz.Events
   alias Memz.Events.Event
+  alias Memz.Accounts.User
   alias Plug.Conn
   alias MemzWeb.Guardian
+
+  alias Memz.Repo
+
 
   @create_attrs %{end_date: "2017-11-10T01:00", name: "SomE NAME", owner: "some owner"}
   @invalid_name_attrs %{end_date: "2017-11-10T01:00", name: "s", owner: "some owner"}
@@ -46,15 +50,23 @@ defmodule MemzWeb.EventControllerTest do
 
     test "returns authorization header when data is valid", %{conn: conn} do
 
-      conn = post conn, event_path(conn, :create), event: @create_attrs
+      random_number_string = :rand.uniform(1000) |> Integer.to_string
+
+      {_, create_attrs } = Map.get_and_update(@create_attrs, :owner, fn current_value ->
+        {current_value, current_value <> random_number_string }
+      end)
+
+      conn = post conn, event_path(conn, :create), event: create_attrs
+
       [token] = Conn.get_resp_header(conn, "authorization")
-
       [token|_] = token |> String.split(" ") |> Enum.reverse
-
 
       {:ok, resource, claims} = Guardian.resource_from_token(token)
       %{"sub" => owner} = claims
-      assert owner == "some owner"
+
+      created_event = Repo.get_by!(User, name: create_attrs.owner)
+
+      assert owner == Integer.to_string(created_event.id)
 
     end
   end

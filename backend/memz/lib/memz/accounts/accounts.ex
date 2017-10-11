@@ -19,9 +19,21 @@ defmodule Memz.Accounts do
 
   """
   def create_user(attrs \\ %{}) do
+
+
     %User{}
     |> User.changeset(attrs)
     |> Repo.insert()
+
+#
+#    case res do
+#      {:error, changset} ->
+#        {:error, changeset}
+#
+#      {:ok, user} ->
+#        {:ok, user}
+#    end
+
   end
 
 end

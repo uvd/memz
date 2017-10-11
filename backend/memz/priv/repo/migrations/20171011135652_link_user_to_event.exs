@@ -7,4 +7,7 @@ defmodule Memz.Repo.Migrations.LinkUserToEvent do
       add :user_id, references(:users), null: false
     end
   end
+
+  create index(:events, [:user_id])
+
 end

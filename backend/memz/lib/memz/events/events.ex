@@ -50,13 +50,26 @@ defmodule Memz.Events do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_event(%User{} = user, attrs \\ %{}) do
+  def create_event(attrs \\ %{}) do
 
-    event = Ecto.build_assoc(user, :events, attrs)
-
-    event
+    %Event{}
       |> Event.changeset(attrs)
       |> Repo.insert()
+
+
+
+
+
+    #eventChangeset = Event.changeset(%Event{}, attrs)
+    #eventChangeset = Ecto.build_assoc(user, :events, attrs)
+    #Repo.insert(eventChangeset)
+
+#    event = Ecto.build_assoc(user, :events, attrs)
+#
+#    event = Event.changeset(event, attrs)
+#
+#    event
+#      |> Repo.insert()
 
 #
 #    case res do

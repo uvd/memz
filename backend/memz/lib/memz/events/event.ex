@@ -10,8 +10,8 @@ defmodule Memz.Events.Event do
   alias Memz.Accounts.User
 
   schema "events" do
-    field :end_date, :naive_datetime
     field :name, :string
+    field :end_date, :naive_datetime
     field :slug, NameSlug.Type
 
     belongs_to :user, User
@@ -22,8 +22,8 @@ defmodule Memz.Events.Event do
   @doc false
   def changeset(%Event{} = event, attrs) do
     event
-    |> cast(attrs, [:name, :user_id, :end_date])
-    |> validate_required([:name, :user_id, :end_date])
+    |> cast(attrs, [:name, :end_date, :user_id])
+    |> validate_required([:name, :end_date, :user_id])
     |> validate_length(:name, min: 4, max: 20)
     |> validate_date_in_future(:end_date)
     |> NameSlug.maybe_generate_slug
