@@ -3,7 +3,11 @@ defmodule MemzWeb.EventController do
 
   alias Memz.Events
   alias Memz.Events.Event
+  alias Memz.Accounts
+  alias Memz.Accounts.User
+
   alias MemzWeb.Guardian
+  alias Memz.Repo
 
   action_fallback MemzWeb.FallbackController
 
@@ -17,28 +21,31 @@ defmodule MemzWeb.EventController do
 
     event_params = %{
       name: name,
-      owner: owner,
       end_date: Timex.parse!(end_date_time, "{ISO:Extended}")
     }
 
-    resource = %{:id => owner}
+    with {:ok, %User{} = user } <- Accounts.create_user(%{ "name": owner }),
+         {:ok, token, _} <- Guardian.encode_and_sign(user),
+         {:ok, %Event{} = event} <- Events.create_event(user, event_params) do
 
-    {:ok, token, _} = Guardian.encode_and_sign(resource)
+      Repo.preload(event, :user)
 
-    with {:ok, %Event{} = event} <- Events.create_event(event_params) do
       conn
-      |> put_resp_header("authorization", "Bearer " <> token)
-      |> put_status(:created)
-      |> render("show.json", event: event)
+          |> put_resp_header("authorization", "Bearer " <> token)
+          |> put_status(:created)
+          |> render("show.json", event: event)
     end
+
   end
 
-  def show(conn, _params) do
+  def show(conn, %{"id" => id}) do
+
+    {id, _} = Integer.parse(id)
+    event = Events.get_event!(id)
 
     conn
     |> put_status(:ok)
-    |> text("Okie dokie")
-    |> halt()
+    |> render("show.json", event: event)
   end
 
 end

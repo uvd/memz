@@ -2,6 +2,7 @@ defmodule MemzWeb.EventControllerTest do
   use MemzWeb.ConnCase
 
   alias Memz.Events
+  alias Memz.Events.Event
   alias Plug.Conn
   alias MemzWeb.Guardian
 
@@ -67,20 +68,32 @@ defmodule MemzWeb.EventControllerTest do
       assert conn.halted == true
     end
 
-    test "should return a 200 response when the authorization header is set", %{conn: conn} do
+    test "shows an event for the given id if authenticated", %{conn: conn} do
 
-       resource = %{:id => "some owner"}
-       {:ok, token, _} = Guardian.encode_and_sign(resource)
+      event_params = %{
+        name: "My new event",
+        owner: "Alex",
+        end_date: ~N[2020-04-17 14:00:00.000000]
+      }
 
-      new_conn = build_conn()
-      new_conn = new_conn
-        |> put_req_header("accept", "application/json")
+      resource = %{:id => "Alex"}
+      {:ok, token, _} = Guardian.encode_and_sign(resource)
+
+      conn =
+        conn
         |> put_req_header("authorization", "Bearer " <> token)
 
-      new_conn = get new_conn, event_path(new_conn, :show, 1)
-      assert new_conn.status == 200
+      with {:ok, %Event{} = event} <- Events.create_event(event_params) do
+
+        conn = get conn, event_path(conn, :show, event.id)
+        assert json_response(conn, 200)["data"] == %{
+                 "id" => event.id,
+                 "end_date" => "2020-04-17T14:00:00.000000",
+                 "name" => event.name,
+                 "slug" => "my-new-event",
+                 "owner" => event.owner}
+      end
 
     end
-
   end
 end

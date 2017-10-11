@@ -7,6 +7,7 @@ defmodule Memz.Events do
   alias Memz.Repo
 
   alias Memz.Events.Event
+  alias Memz.Accounts.User
 
   @doc """
   Returns the list of events.
@@ -49,11 +50,29 @@ defmodule Memz.Events do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_event(attrs \\ %{}) do
-    %Event{}
-    |> Event.changeset(attrs)
-    |> Repo.insert()
+  def create_event(%User{} = user, attrs \\ %{}) do
+
+    event = Ecto.build_assoc(user, :events, attrs)
+
+    event
+      |> Event.changeset(attrs)
+      |> Repo.insert()
+
+#
+#    case res do
+#      {:ok, event} ->
+#        event = Repo.preload(event, :user)
+#        { :ok, event }
+#
+#      {:error, changeset} ->
+#        {:error, changeset}
+#
+#    end
+
+
+
   end
+
 
   @doc """
   Updates a event.
