@@ -15,25 +15,12 @@ import Navigation
 import Pages.CreateEventPage as CreateEventPage
 import Pages.EventPage as EventPage
 import Pages.HomePage as HomePage
-import UrlParser exposing ((</>), Parser, int, map, oneOf, parseHash, s, string)
 import Data.Event exposing (..)
+import Route exposing (..)
 
 
 type alias LocalStorageRecord =
     ( String, String )
-
-
-incrementCurrentStep : Step -> Step
-incrementCurrentStep step =
-    case step of
-        Model.OwnerStep ->
-            Model.NameStep
-
-        Model.NameStep ->
-            Model.EndDateTimeStep
-
-        s ->
-            s
 
 
 view : Model -> Html Msg
@@ -71,7 +58,7 @@ update msg model =
             ( updateNewEvent (\x -> { x | endDateTime = d }) model, Cmd.none )
 
         Messages.IncrementStep ->
-            ( updateNewEvent (\x -> { x | step = incrementCurrentStep x.step }) model, Cmd.none )
+            ( updateNewEvent (\x -> { x | step = CreateEventPage.incrementCurrentStep x.step }) model, Cmd.none )
 
         Messages.CreateEvent ->
             ( model, postCreateEvent (bodyEncoder model.newEvent) )
@@ -160,24 +147,6 @@ getRequestForEvent id slug token =
             |> withHeader "Authorization" token
             |> withExpect (Http.expectJson Data.Event.decoder)
             |> send Messages.GetEventResponse
-
-
-getRoute : Navigation.Location -> Route
-getRoute location =
-    case parseHash route location of
-        Just route ->
-            route
-
-        _ ->
-            Public HomePageRoute
-
-
-route : Parser (Route -> a) a
-route =
-    oneOf
-        [ UrlParser.map (\id slug -> Private (EventRoute id slug)) (UrlParser.s "event" </> int </> string)
-        , UrlParser.map (Public CreateEventRoute) (UrlParser.s "create-event")
-        ]
 
 
 onLocationChange : Model -> Navigation.Location -> ( Model, Cmd Msg )

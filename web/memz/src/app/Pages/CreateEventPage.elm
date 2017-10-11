@@ -7,6 +7,23 @@ import Messages exposing (Msg)
 import Model exposing (Model, Step)
 
 
+incrementCurrentStep : Step -> Step
+incrementCurrentStep step =
+    case step of
+        Model.OwnerStep ->
+            Model.NameStep
+
+        Model.NameStep ->
+            Model.EndDateTimeStep
+
+        s ->
+            s
+
+
+
+-- VIEW --
+
+
 view : Model -> Html Msg
 view model =
     div []

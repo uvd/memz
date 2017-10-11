@@ -1,24 +1,9 @@
 module Model exposing (..)
 
 import Phoenix.Socket
-import Phoenix.Channel
-import Phoenix.Push
 import Messages exposing (..)
 import Data.Event exposing (..)
-
-
-type PublicRoute
-    = HomePageRoute
-    | CreateEventRoute
-
-
-type PrivateRoute
-    = EventRoute Int String
-
-
-type Route
-    = Public PublicRoute
-    | Private PrivateRoute
+import Route exposing (..)
 
 
 type Step
