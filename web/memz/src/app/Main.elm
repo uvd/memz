@@ -54,7 +54,7 @@ updateNewEvent update m =
         updatedNewEvent =
             update m.newEvent
     in
-    { m | newEvent = updatedNewEvent }
+        { m | newEvent = updatedNewEvent }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -75,8 +75,12 @@ update msg model =
         Messages.CreateEvent ->
             ( model, postCreateEvent (bodyEncoder model.newEvent) )
 
-        Messages.CreateEventResponse (Result.Ok ( header, _ )) ->
-            ( { model | token = Just header }, setLocalStorageItem ( "authToken", header ) )
+        Messages.CreateEventResponse (Result.Ok ( header, { id, slug } )) ->
+            let
+                eventUrl =
+                    "/#/event/" ++ (toString id) ++ "/" ++ slug
+            in
+                ( { model | token = Just header }, Cmd.batch [ setLocalStorageItem ( "authToken", header ), Navigation.newUrl <| eventUrl ] )
 
         Messages.CreateEventResponse (Result.Err err) ->
             case err of
@@ -88,12 +92,12 @@ update msg model =
                         updatedModel =
                             { model | newEvent = initialNewEvent }
                     in
-                    case decodedResponse of
-                        Ok serverErrors ->
-                            ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
+                        case decodedResponse of
+                            Ok serverErrors ->
+                                ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
 
-                        Err _ ->
-                            ( updatedModel, Cmd.none )
+                            Err _ ->
+                                ( updatedModel, Cmd.none )
 
                 Http.BadPayload err _ ->
                     Debug.log ("BAD PAYLOAD ERROR" ++ err)
@@ -104,12 +108,7 @@ update msg model =
                         ( model, Cmd.none )
 
         Messages.GetEventResponse (Result.Ok response) ->
-            let
-                {id, slug} = response
-                eventUrl =
-                    "/#/event/" ++ (toString id) ++ "/" ++ slug
-            in
-            ( { model | event = Just response }, Navigation.newUrl <| eventUrl )
+            ( { model | event = Just response }, Cmd.none )
 
         Messages.GetEventResponse (Result.Err err) ->
             --@TODO
@@ -153,10 +152,10 @@ getRequestForEvent id slug token =
         url =
             "http://localhost:4000/v1/event/" ++ toString id ++ "/" ++ slug
     in
-    HttpBuilder.get url
-        |> withHeader "authorisation" token
-        |> withExpect (Http.expectJson responseDecoder)
-        |> send Messages.GetEventResponse
+        HttpBuilder.get url
+            |> withHeader "Authorization" token
+            |> withExpect (Http.expectJson responseDecoder)
+            |> send Messages.GetEventResponse
 
 
 getRoute : Navigation.Location -> Route
@@ -183,15 +182,15 @@ onLocationChange model location =
         newRoute =
             getRoute location
     in
-    case ( newRoute, model.token ) of
-        ( Public r, _ ) ->
-            ( { model | route = newRoute }, commandForRoute newRoute model.token )
+        case ( newRoute, model.token ) of
+            ( Public r, _ ) ->
+                ( { model | route = newRoute }, commandForRoute newRoute model.token )
 
-        ( Private r, Just token ) ->
-            ( { model | route = newRoute }, commandForRoute newRoute model.token )
+            ( Private r, Just token ) ->
+                ( { model | route = newRoute }, commandForRoute newRoute model.token )
 
-        ( Private r, Nothing ) ->
-            ( { model | route = newRoute }, commandForAuthToken )
+            ( Private r, Nothing ) ->
+                ( { model | route = newRoute }, commandForAuthToken )
 
 
 commandForAuthToken : Cmd Msg
@@ -222,18 +221,18 @@ getCreateEventRequest url body =
                         body =
                             Decode.decodeString responseDecoder r.body
                     in
-                    case ( header, body ) of
-                        ( Just header, Ok body ) ->
-                            Ok ( header, body )
+                        case ( header, body ) of
+                            ( Just header, Ok body ) ->
+                                Ok ( header, body )
 
-                        ( Just _, Err error ) ->
-                            Err error
+                            ( Just _, Err error ) ->
+                                Err error
 
-                        ( Nothing, Ok _ ) ->
-                            Err "No authorization header"
+                            ( Nothing, Ok _ ) ->
+                                Err "No authorization header"
 
-                        ( Nothing, Err error ) ->
-                            Err ("No authorization header, and " ++ error)
+                            ( Nothing, Err error ) ->
+                                Err ("No authorization header, and " ++ error)
                 )
         , timeout = Nothing
         , withCredentials = False
@@ -254,7 +253,7 @@ bodyEncoder data =
                   )
                 ]
     in
-    Encode.encode 0 encodedValue
+        Encode.encode 0 encodedValue
 
 
 errorResponseDecoder : Decode.Decoder (List ServerError)
