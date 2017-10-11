@@ -1,11 +1,9 @@
 module Model exposing (..)
 
-import Messages exposing (Event)
-
 
 type PublicRoute
     = HomePageRoute
-      | CreateEventRoute
+    | CreateEventRoute
 
 
 type PrivateRoute
@@ -36,11 +34,20 @@ type alias NewEvent =
     }
 
 
+type alias Event =
+    { id : Int
+    , name : String
+    , owner : String
+    , endDateTime : String
+    , slug : String
+    }
+
+
 type alias Model =
     { newEvent : NewEvent
     , route : Route
     , token : Maybe String
-    , event : Maybe Messages.Event
+    , event : Maybe Event
     }
 
 

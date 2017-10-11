@@ -9,7 +9,7 @@ import Http exposing (Error)
 import HttpBuilder exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Messages exposing (Event, EventResponse, Msg)
+import Messages exposing (EventResponse, Msg)
 import Model exposing (..)
 import Navigation
 import Pages.CreateEventPage as CreateEventPage
@@ -45,7 +45,7 @@ view model =
             CreateEventPage.view model
 
         Private (EventRoute id slug) ->
-            EventPage.view
+            EventPage.view model
 
 
 updateNewEvent : (NewEvent -> NewEvent) -> Model -> Model

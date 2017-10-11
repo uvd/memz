@@ -2,15 +2,7 @@ module Messages exposing (..)
 
 import Navigation
 import Http
-
-
-type alias Event =
-    { id : Int
-    , name : String
-    , owner : String
-    , endDateTime : String
-    , slug : String
-    }
+import Model exposing (..)
 
 
 type alias EventResponse =
