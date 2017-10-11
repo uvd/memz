@@ -44,15 +44,43 @@ defmodule MemzWeb.EventControllerTest do
     end
 
     test "returns authorization header when data is valid", %{conn: conn} do
-      
+
       conn = post conn, event_path(conn, :create), event: @create_attrs
       [token] = Conn.get_resp_header(conn, "authorization")
+
+      [token|_] = token |> String.split(" ") |> Enum.reverse
+
+
       {:ok, resource, claims} = Guardian.resource_from_token(token)
       %{"sub" => owner} = claims
       assert owner == "some owner"
 
     end
+  end
 
+  describe "show event" do
+    test "should return a 401 response when the authorization header is not set", %{conn: conn} do
+
+      conn = get conn, event_path(conn, :show, 1)
+      assert conn.status == 401
+      assert conn.resp_body == "Unauthorized access"
+      assert conn.halted == true
+    end
+
+    test "should return a 200 response when the authorization header is set", %{conn: conn} do
+
+       resource = %{:id => "some owner"}
+       {:ok, token, _} = Guardian.encode_and_sign(resource)
+
+      new_conn = build_conn()
+      new_conn = new_conn
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer " <> token)
+
+      new_conn = get new_conn, event_path(new_conn, :show, 1)
+      assert new_conn.status == 200
+
+    end
 
   end
 end
