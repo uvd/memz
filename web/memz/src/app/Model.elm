@@ -5,11 +5,11 @@ import Messages exposing (Event)
 
 type PublicRoute
     = HomePageRoute
+      | CreateEventRoute
 
 
 type PrivateRoute
-    = CreateEventRoute
-    | EventRoute Int String
+    = EventRoute Int String
 
 
 type Route

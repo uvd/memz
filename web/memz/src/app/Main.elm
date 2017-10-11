@@ -41,7 +41,7 @@ view model =
         Public HomePageRoute ->
             HomePage.view
 
-        Private CreateEventRoute ->
+        Public CreateEventRoute ->
             CreateEventPage.view model
 
         Private (EventRoute id slug) ->
@@ -104,7 +104,12 @@ update msg model =
                         ( model, Cmd.none )
 
         Messages.GetEventResponse (Result.Ok response) ->
-            ( { model | event = Just response }, Cmd.none )
+            let
+                {id, slug} = response
+                eventUrl =
+                    "/#/event/" ++ (toString id) ++ "/" ++ slug
+            in
+            ( { model | event = Just response }, Navigation.newUrl <| eventUrl )
 
         Messages.GetEventResponse (Result.Err err) ->
             --@TODO
@@ -146,7 +151,7 @@ getRequestForEvent : Int -> String -> String -> Cmd Msg
 getRequestForEvent id slug token =
     let
         url =
-            "http://localhost:3000/v1/event/" ++ toString id ++ "/" ++ slug
+            "http://localhost:4000/v1/event/" ++ toString id ++ "/" ++ slug
     in
     HttpBuilder.get url
         |> withHeader "authorisation" token
@@ -168,7 +173,7 @@ route : Parser (Route -> a) a
 route =
     oneOf
         [ UrlParser.map (\id slug -> Private (EventRoute id slug)) (UrlParser.s "event" </> int </> string)
-        , UrlParser.map (Private CreateEventRoute) (UrlParser.s "create-event")
+        , UrlParser.map (Public CreateEventRoute) (UrlParser.s "create-event")
         ]
 
 
