@@ -2,7 +2,7 @@ defmodule MemzWeb.EventChannel do
 
   use MemzWeb, :channel
   alias MemzWeb.Guardian
-  alias MemzWeb.Events
+  alias Memz.Events
 
   @default_images [
     %{ :path => "https://i.redd.it/c2co89auocrz.jpg", :owner => "Eddy", :date => ~N[2020-04-17 14:00:00.000000] }
@@ -13,7 +13,7 @@ defmodule MemzWeb.EventChannel do
 
   def join("event:" <> id, payload, socket) do
 
-    if authorized?(payload, id) do
+    if authorized?(payload, Events.get_event!(id)) do
       {:ok, images(), socket}
     else
       {:error, %{reason: "unauthorized"}}
@@ -35,22 +35,16 @@ defmodule MemzWeb.EventChannel do
 #  end
 
   # Add authorization logic here as required.
-  defp authorized?(%{"guardian_token" => token}, event_id) do
+  defp authorized?(%{"guardian_token" => token}, event) do
 
-    IO.inspect(token)
-#
-#    {:ok, user, claims} = Guardian.resource_from_token(token)
-#
-#    event = Events.get_event!(event_id)
-#
-#    if event.user.id == user.id do
-#      true
-#    end
+    case Guardian.resource_from_token(token) do
+      {:ok, user, _} -> event.user.id == user.id
+      _  -> false
+    end
 
-    true
   end
 
-  defp authorized?(_) do
+  defp authorized?(_, _) do
     false
   end
 
