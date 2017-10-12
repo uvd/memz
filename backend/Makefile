@@ -6,13 +6,13 @@ ENV ?= testing
 build_dev:
 	docker build -f Dockerfile.dev -t ${DOCKER_IMAGE}:backend-dev .
 
-install:
+install: build_dev
 	docker run --rm -it -v ${CURDIR}/memz:/app --workdir /app ${DOCKER_IMAGE}:backend-dev mix deps.get
 
 fmt:
 	docker run --rm -v ${CURDIR}/memz:/app --workdir /app ${DOCKER_IMAGE}:backend-dev mix exfmt .
 
-test:
+test: install
 	docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 
 build:
