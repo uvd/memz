@@ -19,6 +19,19 @@ defmodule MemzWeb.EventControllerTest do
     event
   end
 
+
+  def attrs_with_user_id(attrs, user_name \\ "Jane") do
+
+    {:ok, user } =
+      %User{}
+      |> User.changeset(%{ "name" => user_name })
+      |> Repo.insert()
+
+    Map.put(attrs, :user_id, user.id)
+
+  end
+
+
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -83,23 +96,34 @@ defmodule MemzWeb.EventControllerTest do
   describe "show event" do
     test "should return a 401 response when the authorization header is not set", %{conn: conn} do
 
-      with {:ok, %Event{} = event} <- Events.create_event(@create_attrs) do
+      event_params = %{
+        name: "My new event",
+        end_date: ~N[2020-04-17 14:00:00.000000]
+      }
 
-        conn = get conn, "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+      case Events.create_event(attrs_with_user_id(event_params)) do
 
-        assert conn.status == 401
-        assert conn.resp_body == "Unauthorized access"
-        assert conn.halted == true
+        {:ok, %Event{} = event} ->
+
+          conn = get conn, "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+
+          assert conn.status == 401
+          assert conn.resp_body == "Unauthorized access"
+          assert conn.halted == true
+
+        {:error, changeset} ->
+          IO.inspect(changeset)
+          flunk()
 
       end
 
+
     end
 
-    test "shows an event for the given id if authenticated", %{conn: conn} do
+    test "shows an event for the given id if authenticated and requester is the owner", %{conn: conn} do
 
       event_params = %{
         name: "My new event",
-        owner: "Alex",
         end_date: ~N[2020-04-17 14:00:00.000000]
       }
 
@@ -110,17 +134,29 @@ defmodule MemzWeb.EventControllerTest do
         conn
         |> put_req_header("authorization", "Bearer " <> token)
 
-      with {:ok, %Event{} = event} <- Events.create_event(event_params) do
+      case Events.create_event(attrs_with_user_id(event_params, "Kenny")) do
 
-        conn = get conn, "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+        {:ok, %Event{} = event} ->
+          created_user = Repo.get_by!(User, name: "Kenny")
 
-        assert json_response(conn, 200)["data"] == %{
-                 "id" => event.id,
-                 "end_date" => "2020-04-17T14:00:00.000000",
-                 "name" => event.name,
-                 "slug" => "my-new-event",
-                 "owner" => event.owner}
+          conn = get conn, "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+
+          assert json_response(conn, 200)["data"] == %{
+                   "id" => event.id,
+                   "end_date" => "2020-04-17T14:00:00.000000",
+                   "name" => event.name,
+                   "slug" => "my-new-event",
+                   "owner" => "Kenny"}
+
+        _ ->
+          flunk()
+
+
       end
+
+    end
+
+    test "returns a 401 when authenticated and requester is not the owner", %{conn: conn} do
 
     end
   end

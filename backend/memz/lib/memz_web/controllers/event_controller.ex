@@ -14,6 +14,8 @@ defmodule MemzWeb.EventController do
     {id, _} = Integer.parse(id)
     event = Events.get_event!(id)
 
+    event = Repo.preload(event, :user)
+
     conn
     |> put_status(:ok)
     |> render("show.json", event: event)
@@ -47,7 +49,6 @@ defmodule MemzWeb.EventController do
 
     with {:ok, token, _} <- Guardian.encode_and_sign(user),
          {:ok, %Event{} = event} <- Events.create_event(Map.put(event_params, :user_id, user.id)) do
-
 
       conn
       |> put_resp_header("authorization", "Bearer " <> token)

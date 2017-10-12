@@ -39,7 +39,7 @@ defmodule MemzWeb.Router do
   scope "/v1", MemzWeb do
     pipe_through [:api, :authenticated]
 
-    get "/events/:id/:slug", EventsController, :show
+    get "/events/:id/*anything", EventController, :show
   end
 
 end

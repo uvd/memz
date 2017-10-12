@@ -56,34 +56,6 @@ defmodule Memz.Events do
       |> Event.changeset(attrs)
       |> Repo.insert()
 
-
-
-
-
-    #eventChangeset = Event.changeset(%Event{}, attrs)
-    #eventChangeset = Ecto.build_assoc(user, :events, attrs)
-    #Repo.insert(eventChangeset)
-
-#    event = Ecto.build_assoc(user, :events, attrs)
-#
-#    event = Event.changeset(event, attrs)
-#
-#    event
-#      |> Repo.insert()
-
-#
-#    case res do
-#      {:ok, event} ->
-#        event = Repo.preload(event, :user)
-#        { :ok, event }
-#
-#      {:error, changeset} ->
-#        {:error, changeset}
-#
-#    end
-
-
-
   end
 
 
