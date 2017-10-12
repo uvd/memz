@@ -3,6 +3,7 @@ defmodule MemzWeb.UserSocket do
 
   ## Channels
   # channel "room:*", MemzWeb.RoomChannel
+  channel "event:lobby", MemzWeb.EventChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

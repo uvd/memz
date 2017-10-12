@@ -72,7 +72,7 @@ defmodule MemzWeb.EventController do
     updated_changeset_with_owner_errors =
       changeset.errors
       |> Enum.filter(fn {k,_} -> k == :name end)
-      |> Enum.map(fn {_, v} -> v end)
+      |> Enum.map(&elem(&1, 1))
       |> Enum.reduce(changeset, fn ({message, keys}, acc) ->
         Ecto.Changeset.add_error(acc, :owner, message, keys)
       end)
