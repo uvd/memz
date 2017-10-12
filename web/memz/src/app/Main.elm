@@ -227,7 +227,7 @@ commandForAuthToken =
 postCreateEvent : String -> String -> Cmd Msg
 postCreateEvent baseUrl encodedData =
     Http.send Messages.CreateEventResponse <|
-        getCreateEventRequest (baseUrl ++ "/v1/events") (Http.stringBody "application/json" encodedData)
+        getCreateEventRequest (baseUrl ++ "/v1/event") (Http.stringBody "application/json" encodedData)
 
 
 getCreateEventRequest : String -> Http.Body -> Http.Request EventResponse
