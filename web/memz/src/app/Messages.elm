@@ -5,6 +5,7 @@ import Http
 import Data.Event exposing (..)
 import Phoenix.Socket
 import Json.Encode
+import FileReader exposing (NativeFile)
 
 
 type alias EventResponse =
@@ -23,3 +24,5 @@ type Msg
     | LocalStorageResponse ( String, Maybe String )
     | PhoenixMsg (Phoenix.Socket.Msg Msg)
     | EventChannelJoined Json.Encode.Value
+    | PhotoSelected (List NativeFile)
+    | UploadPhoto (Result FileReader.Error (List Json.Encode.Value))

@@ -1,10 +1,11 @@
 module Pages.EventPage exposing (..)
 
+import Data.Event exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Messages exposing (Msg)
 import Model exposing (..)
-import Data.Event exposing (..)
+import FileReader
 
 
 view : Model -> Html Msg
@@ -21,7 +22,13 @@ view model =
                     ]
                 , ul
                     []
-                    ((List.map renderPhoto) event.photos)
+                    (List.map renderPhoto event.photos)
+                , input
+                    [ type_ "file"
+                    , accept "image/*"
+                    , FileReader.onFileChange Messages.PhotoSelected
+                    ]
+                    []
                 ]
 
 
