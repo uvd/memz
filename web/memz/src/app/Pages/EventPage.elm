@@ -10,7 +10,7 @@ import FileReader
 
 view : Model -> Html Msg
 view model =
-    case model.event of
+    case model.currentEvent.event of
         Nothing ->
             div [] [ text "Page loading" ]
 
@@ -22,13 +22,14 @@ view model =
                     ]
                 , ul
                     []
-                    (List.map renderPhoto event.photos)
+                    (List.map renderPhoto model.currentEvent.photos)
                 , input
                     [ type_ "file"
                     , accept "image/*"
                     , FileReader.onFileChange Messages.PhotoSelected
                     ]
                     []
+                , p [] [ text (toString model.currentEvent.status) ]
                 ]
 
 

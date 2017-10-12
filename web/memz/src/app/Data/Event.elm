@@ -16,7 +16,18 @@ type alias Event =
     , owner : String
     , endDateTime : String
     , slug : String
+    }
+
+
+type Status
+    = Idle
+    | Uploading
+
+
+type alias CurrentEvent =
+    { event : Maybe Event
     , photos : List Photo
+    , status : Status
     }
 
 
@@ -35,7 +46,6 @@ decoder =
             (Decode.at [ "end_date" ] Decode.string)
             (Decode.at [ "slug" ] Decode.string)
         )
-        |> Decode.map (\x -> x [ { path = "http://placekitten.com/200/300", name = "James", date = "Today, 12:30pm" } ])
 
 
 photoDecoder : Decode.Decoder Photo

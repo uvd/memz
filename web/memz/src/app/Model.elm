@@ -31,9 +31,9 @@ type alias NewEvent =
 
 type alias Model =
     { newEvent : NewEvent
+    , currentEvent : CurrentEvent
     , route : Route
     , token : Maybe String
-    , event : Maybe Event
     , phxSocket : Phoenix.Socket.Socket Msg
     , baseUrl : String
     }
@@ -49,12 +49,20 @@ initialNewEvent =
     }
 
 
+initialCurrentEvent : CurrentEvent
+initialCurrentEvent =
+    { event = Nothing
+    , photos = []
+    , status = Idle
+    }
+
+
 initialModel : Flags -> Model
 initialModel flags =
     { newEvent = initialNewEvent
+    , currentEvent = initialCurrentEvent
     , route = Public HomePageRoute
     , token = Nothing
-    , event = Nothing
     , phxSocket = Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
     , baseUrl = flags.baseUrl
     }
