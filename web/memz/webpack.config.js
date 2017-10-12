@@ -5,7 +5,7 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const merge = require('webpack-merge');
 
 const env = process.env.NODE_ENV || 'dev';
-const prod = env === 'prod';
+const prod = env === 'production' || env === 'testing';
 
 const publicPath = '/';
 const entryPath = './src/main.js';
