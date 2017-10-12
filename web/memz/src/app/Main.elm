@@ -1,6 +1,7 @@
 port module Main exposing (..)
 
 import Phoenix.Socket
+import Phoenix.Channel
 import Debug exposing (log)
 import Dict exposing (get)
 import Html exposing (..)
@@ -17,7 +18,6 @@ import Pages.EventPage as EventPage
 import Pages.HomePage as HomePage
 import Data.Event exposing (..)
 import Route exposing (..)
-
 
 type alias LocalStorageRecord =
     ( String, String )
@@ -96,7 +96,17 @@ update msg model =
                         ( model, Cmd.none )
 
         Messages.GetEventResponse (Result.Ok response) ->
-            ( { model | event = Just response }, Cmd.none )
+            let
+                channelId = "event:" ++ (toString response.id)
+                payload = Encode.object [ ( "guardian_token", Encode.string (Maybe.withDefault "" model.token)) ]
+                channel =
+                    Phoenix.Channel.init channelId
+                        |> Phoenix.Channel.withPayload payload
+                        |> Phoenix.Channel.onJoin Messages.EventChannelJoined
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.join channel model.phxSocket
+            in
+                ( { model | event = Just response, phxSocket = phxSocket }, Cmd.map Messages.PhoenixMsg phxCmd )
 
         Messages.GetEventResponse (Result.Err err) ->
             Debug.log "Error getting event"
@@ -118,8 +128,25 @@ update msg model =
         Messages.LocalStorageResponse _ ->
             ( model, Cmd.none )
 
-        Messages.PhoenixMsg _ ->
-            ( model, Cmd.none )
+        Messages.PhoenixMsg msg ->
+            let
+                ( phxSocket, phxCmd ) =
+                    Phoenix.Socket.update msg model.phxSocket
+            in
+                ( { model | phxSocket = phxSocket }
+                , Cmd.map Messages.PhoenixMsg phxCmd)
+
+        Messages.EventChannelJoined jsonValue ->
+            let
+                photos = Result.withDefault [] <| Decode.decodeValue (Decode.list photoDecoder) jsonValue
+            in
+                case model.event of
+                    Nothing -> (model, Cmd.none)
+                    Just event ->
+                        let
+                            updatedEvent = {event | photos = photos}
+                        in
+                            ({model | event = Just updatedEvent}, Cmd.none)
 
 
 commandForRoute : Route -> Maybe String -> Cmd Msg

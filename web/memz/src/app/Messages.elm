@@ -4,6 +4,7 @@ import Navigation
 import Http
 import Data.Event exposing (..)
 import Phoenix.Socket
+import Json.Encode
 
 
 type alias EventResponse =
@@ -21,3 +22,4 @@ type Msg
     | GetEventResponse (Result Http.Error Event)
     | LocalStorageResponse ( String, Maybe String )
     | PhoenixMsg (Phoenix.Socket.Msg Msg)
+    | EventChannelJoined Json.Encode.Value
