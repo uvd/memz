@@ -28,6 +28,7 @@ build:
 	-f Dockerfile.release \
 	-t ${DOCKER_IMAGE}:${GIT_VERSION} \
 	-t ${DOCKER_IMAGE}:latest \
+	-t memz:latest \
 	.
 
 get-keys:

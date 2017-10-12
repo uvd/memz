@@ -3,7 +3,9 @@ version: '3'
 services:
 
   elixir:
-    build: .
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
     working_dir: /app/memz
     command: sh -c "mix ecto.setup; mix phx.server"
     environment:
