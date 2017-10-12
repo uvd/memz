@@ -1,5 +1,6 @@
 defmodule MemzWeb.Guardian do
   use Guardian, otp_app: :memz
+
   alias Memz.Accounts
 
   def subject_for_token(resource, _claims) do

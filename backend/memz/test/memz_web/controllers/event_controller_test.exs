@@ -111,8 +111,7 @@ defmodule MemzWeb.EventControllerTest do
           assert conn.resp_body == "Unauthorized access"
           assert conn.halted == true
 
-        {:error, changeset} ->
-          IO.inspect(changeset)
+        {:error, _} ->
           flunk()
 
       end
@@ -139,9 +138,6 @@ defmodule MemzWeb.EventControllerTest do
 
           path = "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
 
-          IO.inspect(path)
-          IO.inspect(conn)
-
           conn = get conn, path
 
           assert json_response(conn, 200)["data"] == %{
@@ -154,12 +150,45 @@ defmodule MemzWeb.EventControllerTest do
         _ ->
           flunk()
 
-
       end
 
     end
 
     test "returns a 401 when authenticated and requester is not the owner", %{conn: conn} do
+
+      event_params = %{
+        name: "My new event",
+        end_date: ~N[2020-04-17 14:00:00.000000]
+      }
+
+      {:ok, not_owner_user } =
+        %User{}
+        |> User.changeset(%{ "name" => "Eddy" })
+        |> Repo.insert()
+
+      case Events.create_event(attrs_with_user_id(event_params, "Kenny")) do
+
+        {:ok, %Event{} = event} ->
+
+          {:ok, token, _} = Guardian.encode_and_sign(not_owner_user)
+
+          conn = conn
+                 |> put_req_header("authorization", "Bearer " <> token)
+
+          path = "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+
+          conn = get conn, path
+
+          assert conn.status == 401
+          assert conn.resp_body == "Unauthorized access"
+          assert conn.halted == true
+
+
+        _ ->
+          flunk()
+
+      end
+
 
     end
   end

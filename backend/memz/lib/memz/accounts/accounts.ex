@@ -36,7 +36,7 @@ defmodule Memz.Accounts do
   ## Examples
 
       iex> get_user!(1)
-      %Event{}
+      %User{}
 
       iex> get_user!(9999)
       ** (Ecto.NoResultsError)

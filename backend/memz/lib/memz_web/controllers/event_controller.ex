@@ -7,25 +7,20 @@ defmodule MemzWeb.EventController do
   alias MemzWeb.Guardian
   alias Memz.Repo
   alias MemzWeb.Guardian.Plug
-  alias MemzWeb.AuthErrorHandler
 
   action_fallback MemzWeb.FallbackController
 
   def show(conn, %{"id" => id}) do
 
-    {:ok, user} = Plug.current_resource(conn)
-
+    user = Plug.current_resource(conn)
     {id, _} = Integer.parse(id)
     event = Events.get_event!(id)
 
-#    IO.inspect(event)
-
-    IO.inspect(user)
-
     if event.user.id != user.id do
-
-      AuthErrorHandler.auth_error(conn, %{}, %{})
-
+      conn
+      |> put_status(:unauthorized)
+      |> text("Unauthorized access")
+      |> halt()
     else
       conn
       |> put_status(:ok)
