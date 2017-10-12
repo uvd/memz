@@ -14,6 +14,8 @@ defmodule MemzWeb.Guardian do
 
     %{"sub" => user_id} = claims
 
+    {user_id, _} = user_id |> Integer.parse
+
     {:ok, Accounts.get_user!(user_id)}
   end
 

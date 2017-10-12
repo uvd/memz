@@ -6,19 +6,32 @@ defmodule MemzWeb.EventController do
   alias Memz.Accounts
   alias MemzWeb.Guardian
   alias Memz.Repo
+  alias MemzWeb.Guardian.Plug
+  alias MemzWeb.AuthErrorHandler
 
   action_fallback MemzWeb.FallbackController
 
   def show(conn, %{"id" => id}) do
 
+    {:ok, user} = Plug.current_resource(conn)
+
     {id, _} = Integer.parse(id)
     event = Events.get_event!(id)
 
-    event = Repo.preload(event, :user)
+#    IO.inspect(event)
 
-    conn
-    |> put_status(:ok)
-    |> render("show.json", event: event)
+    IO.inspect(user)
+
+    if event.user.id != user.id do
+
+      AuthErrorHandler.auth_error(conn, %{}, %{})
+
+    else
+      conn
+      |> put_status(:ok)
+      |> render("show.json", event: event)
+    end
+
   end
 
   @doc """

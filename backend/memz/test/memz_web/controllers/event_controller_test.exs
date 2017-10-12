@@ -127,19 +127,22 @@ defmodule MemzWeb.EventControllerTest do
         end_date: ~N[2020-04-17 14:00:00.000000]
       }
 
-      resource = %{:id => "Alex"}
-      {:ok, token, _} = Guardian.encode_and_sign(resource)
-
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer " <> token)
-
       case Events.create_event(attrs_with_user_id(event_params, "Kenny")) do
 
         {:ok, %Event{} = event} ->
-          created_user = Repo.get_by!(User, name: "Kenny")
 
-          conn = get conn, "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+          created_user = Repo.get_by!(User, name: "Kenny")
+          {:ok, token, _} = Guardian.encode_and_sign(created_user)
+
+          conn = conn
+            |> put_req_header("authorization", "Bearer " <> token)
+
+          path = "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+
+          IO.inspect(path)
+          IO.inspect(conn)
+
+          conn = get conn, path
 
           assert json_response(conn, 200)["data"] == %{
                    "id" => event.id,

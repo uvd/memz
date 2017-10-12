@@ -36,7 +36,16 @@ defmodule Memz.Events do
       ** (Ecto.NoResultsError)
 
   """
-  def get_event!(id), do: Repo.get!(Event, id)
+  def get_event!(id) do
+
+    Repo.one(
+      from event in Event,
+      join: u in assoc(event, :user),
+      where: event.id == ^id,
+      preload: [:user]
+    )
+
+  end
 
   @doc """
   Creates a event.
