@@ -83,10 +83,16 @@ defmodule MemzWeb.EventControllerTest do
   describe "show event" do
     test "should return a 401 response when the authorization header is not set", %{conn: conn} do
 
-      conn = get conn, event_path(conn, :show, 1)
-      assert conn.status == 401
-      assert conn.resp_body == "Unauthorized access"
-      assert conn.halted == true
+      with {:ok, %Event{} = event} <- Events.create_event(@create_attrs) do
+
+        conn = get conn, "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+
+        assert conn.status == 401
+        assert conn.resp_body == "Unauthorized access"
+        assert conn.halted == true
+
+      end
+
     end
 
     test "shows an event for the given id if authenticated", %{conn: conn} do
@@ -106,7 +112,8 @@ defmodule MemzWeb.EventControllerTest do
 
       with {:ok, %Event{} = event} <- Events.create_event(event_params) do
 
-        conn = get conn, event_path(conn, :show, event.id)
+        conn = get conn, "/v1/events/" <> Integer.to_string(event.id) <> "/" <> event.slug
+
         assert json_response(conn, 200)["data"] == %{
                  "id" => event.id,
                  "end_date" => "2020-04-17T14:00:00.000000",
