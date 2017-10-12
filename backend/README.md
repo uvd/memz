@@ -39,3 +39,17 @@ event_data = %{"name" => "UVD Hack Time", "owner" => "Ryan", "end_date" =>"2017-
 conn = Phoenix.ConnTest.build_conn()
 MemzWeb.EventController.create(conn, %{"event" => event_data})
 ```
+
+## Deployment
+
+**Note**: Make sure your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are exported.
+
+Deployment defaults to testing. So you can just run:
+```
+make deploy
+```
+
+To deploy to production:
+```
+ENV=production; make deploy
+```

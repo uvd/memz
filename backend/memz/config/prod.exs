@@ -17,6 +17,9 @@ config :memz, MemzWeb.Endpoint,
   version: Application.spec(:myapp, :vsn),
   secret_key_base: "${SECRET_KEY_BASE}"
 
+# Configures Guardian
+config :memz, MemzWeb.Guardian,
+  secret_key: "${GUARDIAN_SECRET_KEY}"
 
 # Do not print debug messages in production
 config :logger, level: :info

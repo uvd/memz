@@ -1,0 +1,68 @@
+[
+    {
+      "name": "memz-backend_${environment}",
+      "image": "${repository_url}:${version}",
+      "essential": true,
+      "memoryReservation": 256,
+      "portMappings": [
+        {
+          "containerPort": 80
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${environment}.memz-backend-container-logs",
+          "awslogs-region": "${cloudwatch_region}",
+          "awslogs-stream-prefix": "memz-backend"
+        }
+      },
+      "command": ["foreground"],
+      "environment": [
+        {
+          "Name": "WEAVE_CIDR",
+          "Value": "net:${weave_cidr}"
+        },
+        {
+          "Name": "SECRET_KEY_BASE",
+          "Value": "${secret_key_base}"
+        },
+        {
+          "Name": "NODE_COOKIE",
+          "Value": "${secret_key_base}"
+        },
+        {
+          "Name": "GUARDIAN_SECRET_KEY",
+          "Value": "${guardian_secret_key}"
+        },
+        {
+          "Name": "POSTGRES_HOST",
+          "Value": "${postgres_host}"
+        },
+        {
+          "Name": "POSTGRES_DB",
+          "Value": "${postgres_db}"
+        },
+        {
+          "Name": "POSTGRES_PASSWORD",
+          "Value": "${postgres_password}"
+        },
+        {
+          "Name": "POSTGRES_PORT",
+          "Value": "${postgres_port}"
+        },
+        {
+          "Name": "POSTGRES_USER",
+          "Value": "${postgres_user}"
+        },
+        {
+          "Name": "PORT",
+          "Value": "80"
+        }
+      ],
+      "dockerLabels": {
+        "traefik.enable": "true",
+        "traefik.frontend.rule": "Host:${domain}"
+      }
+    }
+  ]

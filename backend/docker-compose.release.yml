@@ -15,6 +15,7 @@ services:
       - POSTGRES_PORT=5432
       - GUARDIAN_SECRET_KEY=memz_secret
       - SECRET_KEY_BASE=secret_key_base
+      - GUARDIAN_SECRET_KEY=guardian_secret_key
       - VIRTUAL_HOST=api.memz.local
       - VIRTUAL_PORT=4000
       - NODE_COOKIE=memz

@@ -8,11 +8,21 @@ EXPOSE 4369
 EXPOSE 9100-9155
 EXPOSE 45892/udp
 
-ENV PORT=4000
-ENV MIX_ENV=prod
-ENV REPLACE_OS_VARS=true
-ENV SHELL=/bin/bash
+ENV PORT 4000
+ENV MIX_ENV prod
+ENV REPLACE_OS_VARS true
+ENV SHELL /bin/bash
 
+ENV SECRET_KEY_BASE changeme
+ENV GUARDIAN_SECRET_KEY changeme
+
+ENV NODE_COOKIE changeme
+
+ENV POSTGRES_USER changeme
+ENV POSTGRES_PASSWORD changeme
+ENV POSTGRES_HOST changeme
+ENV POSTGRES_DB changeme
+ENV POSTGRES_PORT 5432
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
 
@@ -27,8 +37,8 @@ RUN apt-get autoremove && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt/app
 
 
-# ADD THE BUILD APPLICATION TO THE CONTAINER
-ADD memz.tar.gz ./
+# ADD THE BUILT APPLICATION TO THE CONTAINER
+ADD memz/_build/prod/rel/memz/releases/0.0.1/memz.tar.gz ./
 
 COPY memz/rel/entrypoint.sh /opt/app/bin/entrypoint.sh
 RUN chmod +x /opt/app/bin/entrypoint.sh
