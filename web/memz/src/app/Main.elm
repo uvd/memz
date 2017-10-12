@@ -66,7 +66,7 @@ update msg model =
         Messages.CreateEventResponse (Result.Ok ( header, { id, slug } )) ->
             let
                 eventUrl =
-                    "/#/event/" ++ (toString id) ++ "/" ++ slug
+                    "/#/events/" ++ (toString id) ++ "/" ++ slug
             in
                 ( { model | token = Just header }, Cmd.batch [ setLocalStorageItem ( "authToken", header ), Navigation.newUrl <| eventUrl ] )
 
@@ -141,7 +141,7 @@ getRequestForEvent : Int -> String -> String -> Cmd Msg
 getRequestForEvent id slug token =
     let
         url =
-            "http://localhost:4000/v1/event/" ++ toString id ++ "/" ++ slug
+            "http://localhost:4000/v1/events/" ++ toString id ++ "/" ++ slug
     in
         HttpBuilder.get url
             |> withHeader "Authorization" token
