@@ -16,6 +16,10 @@ type alias ServerError =
     ( String, List String )
 
 
+type alias Flags =
+    { baseUrl : String }
+
+
 type alias NewEvent =
     { name : String
     , owner : String
@@ -31,6 +35,7 @@ type alias Model =
     , token : Maybe String
     , event : Maybe Event
     , phxSocket : Phoenix.Socket.Socket Msg
+    , baseUrl : String
     }
 
 
@@ -44,11 +49,12 @@ initialNewEvent =
     }
 
 
-initialModel : Model
-initialModel =
+initialModel : Flags -> Model
+initialModel flags =
     { newEvent = initialNewEvent
     , route = Public HomePageRoute
     , token = Nothing
     , event = Nothing
     , phxSocket = Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
+    , baseUrl = flags.baseUrl
     }

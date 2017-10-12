@@ -19,6 +19,7 @@ import Pages.HomePage as HomePage
 import Data.Event exposing (..)
 import Route exposing (..)
 
+
 type alias LocalStorageRecord =
     ( String, String )
 
@@ -61,7 +62,7 @@ update msg model =
             ( updateNewEvent (\x -> { x | step = CreateEventPage.incrementCurrentStep x.step }) model, Cmd.none )
 
         Messages.CreateEvent ->
-            ( model, postCreateEvent (bodyEncoder model.newEvent) )
+            ( model, postCreateEvent model.baseUrl (bodyEncoder model.newEvent) )
 
         Messages.CreateEventResponse (Result.Ok ( header, { id, slug } )) ->
             let
@@ -97,12 +98,17 @@ update msg model =
 
         Messages.GetEventResponse (Result.Ok response) ->
             let
-                channelId = "event:" ++ (toString response.id)
-                payload = Encode.object [ ( "guardian_token", Encode.string (Maybe.withDefault "" model.token)) ]
+                channelId =
+                    "event:" ++ (toString response.id)
+
+                payload =
+                    Encode.object [ ( "guardian_token", Encode.string (Maybe.withDefault "" model.token) ) ]
+
                 channel =
                     Phoenix.Channel.init channelId
                         |> Phoenix.Channel.withPayload payload
                         |> Phoenix.Channel.onJoin Messages.EventChannelJoined
+
                 ( phxSocket, phxCmd ) =
                     Phoenix.Socket.join channel model.phxSocket
             in
@@ -119,7 +125,7 @@ update msg model =
             ( { model | token = value }
             , case value of
                 Just token ->
-                    commandForRoute model.route value
+                    commandForRoute model.route value model.baseUrl
 
                 Nothing ->
                     Debug.log "Redirect" <| Navigation.newUrl "/"
@@ -134,28 +140,33 @@ update msg model =
                     Phoenix.Socket.update msg model.phxSocket
             in
                 ( { model | phxSocket = phxSocket }
-                , Cmd.map Messages.PhoenixMsg phxCmd)
+                , Cmd.map Messages.PhoenixMsg phxCmd
+                )
 
         Messages.EventChannelJoined jsonValue ->
             let
-                photos = Result.withDefault [] <| Decode.decodeValue (Decode.list photoDecoder) jsonValue
+                photos =
+                    Result.withDefault [] <| Decode.decodeValue (Decode.list photoDecoder) jsonValue
             in
                 case model.event of
-                    Nothing -> (model, Cmd.none)
+                    Nothing ->
+                        ( model, Cmd.none )
+
                     Just event ->
                         let
-                            updatedEvent = {event | photos = photos}
+                            updatedEvent =
+                                { event | photos = photos }
                         in
-                            ({model | event = Just updatedEvent}, Cmd.none)
+                            ( { model | event = Just updatedEvent }, Cmd.none )
 
 
-commandForRoute : Route -> Maybe String -> Cmd Msg
-commandForRoute route token =
+commandForRoute : Route -> Maybe String -> String -> Cmd Msg
+commandForRoute route token baseUrl =
     case route of
         Private (EventRoute id slug) ->
             case token of
                 Just token ->
-                    getRequestForEvent id slug token
+                    getRequestForEvent id slug token baseUrl
 
                 Nothing ->
                     Cmd.none
@@ -164,11 +175,11 @@ commandForRoute route token =
             Cmd.none
 
 
-getRequestForEvent : Int -> String -> String -> Cmd Msg
-getRequestForEvent id slug token =
+getRequestForEvent : Int -> String -> String -> String -> Cmd Msg
+getRequestForEvent id slug token baseUrl =
     let
         url =
-            "http://localhost:4000/v1/events/" ++ toString id ++ "/" ++ slug
+            baseUrl ++ "/v1/events/" ++ toString id ++ "/" ++ slug
     in
         HttpBuilder.get url
             |> withHeader "Authorization" token
@@ -184,10 +195,10 @@ onLocationChange model location =
     in
         case ( newRoute, model.token ) of
             ( Public r, _ ) ->
-                ( { model | route = newRoute }, commandForRoute newRoute model.token )
+                ( { model | route = newRoute }, commandForRoute newRoute model.token model.baseUrl )
 
             ( Private r, Just token ) ->
-                ( { model | route = newRoute }, commandForRoute newRoute model.token )
+                ( { model | route = newRoute }, commandForRoute newRoute model.token model.baseUrl )
 
             ( Private r, Nothing ) ->
                 ( { model | route = newRoute }, commandForAuthToken )
@@ -198,10 +209,10 @@ commandForAuthToken =
     getLocalStorageItem "authToken"
 
 
-postCreateEvent : String -> Cmd Msg
-postCreateEvent encodedData =
+postCreateEvent : String -> String -> Cmd Msg
+postCreateEvent baseUrl encodedData =
     Http.send Messages.CreateEventResponse <|
-        getCreateEventRequest "http://localhost:4000/v1/events" (Http.stringBody "application/json" encodedData)
+        getCreateEventRequest (baseUrl ++ "/v1/events") (Http.stringBody "application/json" encodedData)
 
 
 getCreateEventRequest : String -> Http.Body -> Http.Request EventResponse
@@ -283,10 +294,10 @@ subscriptions model =
         ]
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Navigation.program Messages.UrlChange
-        { init = onLocationChange Model.initialModel
+    Navigation.programWithFlags Messages.UrlChange
+        { init = onLocationChange << Model.initialModel
         , view = view
         , update = update
         , subscriptions = subscriptions

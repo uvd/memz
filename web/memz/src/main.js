@@ -1,6 +1,10 @@
-import './styles.scss';
+require('./styles.scss');
 
-const app = require('./app/Main.elm').Main.fullscreen();
+const config = require('config');
+
+const app = require('./app/Main.elm').Main.fullscreen({
+    baseUrl: config.BASE_URL
+});
 
 // receive something from Elm
 app.ports.getLocalStorageItem.subscribe(function (key) {

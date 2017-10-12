@@ -8,11 +8,14 @@ const env = process.env.NODE_ENV || 'dev';
 const prod = env === 'prod';
 
 const publicPath = '/';
-const entryPath = './src/main.ts';
+const entryPath = './src/main.js';
 
 const commonConfig = {
     resolve: {
-        extensions: ['.js', '.ts', '.elm', '.css', '.scss']
+        extensions: ['.js', '.elm', '.css', '.scss'],
+        alias: {
+            config: path.join(__dirname, 'config', env)
+        }
     },
     context: __dirname,
     plugins: [
@@ -44,12 +47,12 @@ const commonConfig = {
                     'css-loader?modules'
                 ],
             },
-            {
-                test: /\.ts$/,
-                use: [
-                    'awesome-typescript-loader'
-                ]
-            }
+            // {
+            //     test: /\.ts$/,
+            //     use: [
+            //         'awesome-typescript-loader'
+            //     ]
+            // }
         ],
         noParse: /\.elm$/
     }
