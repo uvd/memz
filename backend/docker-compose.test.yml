@@ -6,19 +6,17 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile.dev
-    command: sh -c "MIX_ENV=test; mix ecto.setup; mix test.watch"
+    command: sh -c "MIX_ENV=test; mix ecto.setup; mix do test --color --trace, credo --strict, dogma"
     working_dir: /app/memz
     environment:
       - MIX_ENV=test
       - PORT=4001
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=postgres_test
       - POSTGRES_USER=postgres
       - POSTGRES_DB=memz
       - POSTGRES_PASSWORD=postgres
     volumes:
       - ./:/app
-    ports:
-      - "4001:4001"
     links:
       - postgres_test
     depends_on:
@@ -30,5 +28,3 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=memz_test
-    ports:
-      - "32784:5432"
