@@ -10,13 +10,13 @@ defmodule MemzWeb.EventChannel do
   def join("event:" <> id, %{"guardian_token" => token}, socket) do
 
     event = Events.get_event!(id)
-    IO.inspect(event)
+    rendered = MemzWeb.ImageView.render("index.json", images: event.images)
 
     case Guardian.resource_from_token(token) do
 
       { :ok, user, _ } ->
         if authorized?(user, event) do
-          {:ok, MemzWeb.ImageView.render("index.json", images: event.images), socket}
+          {:ok, rendered.data, socket}
         else
           {:error, %{reason: "unauthorized"}}
         end
