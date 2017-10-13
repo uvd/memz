@@ -12,6 +12,8 @@ defmodule MemzWeb.EventController do
   alias ExAws.S3
   alias Memz.Events.Uploader
 
+  import MemzWeb.Endpoint, only: [broadcast: 3]
+
   action_fallback MemzWeb.FallbackController
 
   def show(conn, %{"id" => id}) do
@@ -64,6 +66,7 @@ defmodule MemzWeb.EventController do
         %Upload{path: path, filename: filename <> ".png"}
         |> Events.create_image(event, user)
 
+      broadcast("event:" <> event.id |> Integer.to_string, "new:photo", MemzWeb.ImageView.render("show.json", image: image))
 
       public_url = Uploader.url({image.file, image})
 

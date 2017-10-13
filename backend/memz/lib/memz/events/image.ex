@@ -34,4 +34,12 @@ defmodule Memz.Events.Image do
     |> validate_required([:user_id, :event_id])
   end
 
+  def dummy_changeset(image, params \\ :invalid) do
+
+    IO.inspect(params)
+
+    image
+    |> cast(params, [:user_id, :event_id, :file])
+    |> validate_required([:user_id, :event_id, :file])
+  end
 end

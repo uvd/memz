@@ -42,8 +42,10 @@ defmodule Memz.Events do
     Repo.one(
       from event in Event,
       join: u in assoc(event, :user),
+      left_join: i in assoc(event, :images),
+      left_join: o in assoc(i, :user),
       where: event.id == ^id,
-      preload: [:user]
+      preload: [:user, {:images, :user}]
     )
 
   end
@@ -83,7 +85,6 @@ defmodule Memz.Events do
   """
   def create_image(file, event, user) do
 
-    IO.inspect(file)
 
     %Image{}
       |> Image.changeset(%{file: file, user_id: user.id, event_id: event.id})
