@@ -42,15 +42,19 @@ view model =
 
 updateNewEvent : (NewEvent -> NewEvent) -> Model -> Model
 updateNewEvent =
-    Utilities.update (\model newEvent -> {model | newEvent = newEvent}) .newEvent
+    Utilities.update (\model newEvent -> { model | newEvent = newEvent }) .newEvent
 
-return: Model -> (Model, Cmd Msg)
-return m = (m, Cmd.none)
 
-updateCurrentEvent: (CurrentEvent -> CurrentEvent) -> Model -> Model
+return : Model -> ( Model, Cmd Msg )
+return m =
+    ( m, Cmd.none )
+
+
+updateCurrentEvent : (CurrentEvent -> CurrentEvent) -> Model -> Model
 updateCurrentEvent =
-    Utilities.update (\model currentEvent -> {model | currentEvent = currentEvent}) .currentEvent
-        
+    Utilities.update (\model currentEvent -> { model | currentEvent = currentEvent }) .currentEvent
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -95,34 +99,45 @@ update msg model =
 
                 Http.BadPayload err _ ->
                     Debug.log ("BAD PAYLOAD ERROR" ++ err)
-                        return model
+                        return
+                        model
 
                 _ ->
                     Debug.log "ERROR"
-                        return model
+                        return
+                        model
 
         Messages.GetEventResponse (Result.Ok response) ->
             let
                 channelId =
                     "event:" ++ toString response.id
 
-                payload =
-                    Encode.object [ ( "guardian_token", stripBearer >> Encode.string <| Maybe.withDefault "" model.token ) ]
-
-                channel =
-                    Phoenix.Channel.init channelId
-                        |> Phoenix.Channel.withPayload payload
-                        |> Phoenix.Channel.onJoin Messages.EventChannelJoined
-
-                ( phxSocket, phxCmd ) =
-                    Phoenix.Socket.join channel model.phxSocket
-                        
+                encodedToken =
+                    model.token
+                        |> Maybe.andThen stripBearer
+                        |> Maybe.map Encode.string
             in
-            (
-             { model | phxSocket = phxSocket }
-                    |> updateCurrentEvent (\e -> { e | event = Just response }),
-                 Cmd.map Messages.PhoenixMsg phxCmd
-            )
+            case encodedToken of
+                Just token ->
+                    let
+                        payload =
+                            Encode.object [ ( "guardian_token", token ) ]
+
+                        channel =
+                            Phoenix.Channel.init channelId
+                                |> Phoenix.Channel.withPayload payload
+                                |> Phoenix.Channel.onJoin Messages.EventChannelJoined
+
+                        ( phxSocket, phxCmd ) =
+                            Phoenix.Socket.join channel model.phxSocket
+                    in
+                    ( { model | phxSocket = phxSocket }
+                        |> updateCurrentEvent (\e -> { e | event = Just response })
+                    , Cmd.map Messages.PhoenixMsg phxCmd
+                    )
+
+                Nothing ->
+                    return model
 
         Messages.GetEventResponse (Result.Err err) ->
             Debug.log "Error getting event"
@@ -168,8 +183,8 @@ update msg model =
                             model.phxSocket
                                 |> Phoenix.Socket.on "new:photo" ("event:" ++ toString event.id) Messages.ReceiveNewPhoto
                     in
-                    {model | phxSocket = updatedSocket }
-                        |> updateCurrentEvent (\e -> {e | photos = photos})
+                    { model | phxSocket = updatedSocket }
+                        |> updateCurrentEvent (\e -> { e | photos = photos })
                         |> return
 
         Messages.PhotoSelected nativeFiles ->
@@ -178,7 +193,7 @@ update msg model =
                     List.map (.blob >> FileReader.readAsDataUrl) nativeFiles
                         |> Task.sequence
             in
-            ( updateCurrentEvent (\e -> {e | status = Uploading}) model, Task.attempt Messages.UploadPhoto task )
+            ( updateCurrentEvent (\e -> { e | status = Uploading }) model, Task.attempt Messages.UploadPhoto task )
 
         Messages.UploadPhoto (Err err) ->
             Debug.log "Error encoding photo" <| return model
@@ -197,30 +212,32 @@ update msg model =
                     return model
 
         Messages.PostPhotoResponse (Err err) ->
-            Debug.log "Error uplodaing photo" 
-                (return <| updateCurrentEvent (\e -> {e | status = Idle}) model)
+            Debug.log "Error uplodaing photo"
+                (return <| updateCurrentEvent (\e -> { e | status = Idle }) model)
 
         Messages.PostPhotoResponse (Ok _) ->
-            return <| updateCurrentEvent (\e -> {e | status = Idle}) model
+            return <| updateCurrentEvent (\e -> { e | status = Idle }) model
 
         Messages.ReceiveNewPhoto value ->
             case Decode.decodeValue photoDecoder value of
                 Ok photo ->
-                    Debug.log "Photo received" <| return (updateCurrentEvent (\e -> {e | photos = photo :: e.photos}) model)
+                    Debug.log "Photo received" <| return (updateCurrentEvent (\e -> { e | photos = photo :: e.photos }) model)
+
                 Err err ->
                     Debug.log (toString err) <| return model
 
 
 commandForRoute : Route -> Maybe String -> String -> Cmd Msg
 commandForRoute route token baseUrl =
-    case (route, token) of
-        (Private (EventRoute id slug), Just token) ->
+    case ( route, token ) of
+        ( Private (EventRoute id slug), Just token ) ->
             getRequestForEvent id slug token baseUrl
+
         _ ->
             Cmd.none
 
 
-stripBearer : String -> String
+stripBearer : String -> Maybe String
 stripBearer fullToken =
     let
         regex =
@@ -231,10 +248,10 @@ stripBearer fullToken =
     in
     case splitToken of
         [ _, token ] ->
-            token
+            Just token
 
         _ ->
-            ""
+            Nothing
 
 
 postPhoto : String -> Int -> String -> String -> String -> Cmd Msg
