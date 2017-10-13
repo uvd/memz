@@ -1,12 +1,18 @@
 defmodule MemzWeb.EventController do
   use MemzWeb, :controller
 
+  alias Plug.Upload, as: Upload
+
   alias Memz.Events
   alias Memz.Events.Event
   alias Memz.Accounts
   alias MemzWeb.Guardian
   alias Memz.Repo
   alias MemzWeb.Guardian.Plug
+  alias ExAws.S3
+  alias Memz.Events.Uploader
+
+  import MemzWeb.Endpoint, only: [broadcast: 3]
 
   action_fallback MemzWeb.FallbackController
 
@@ -25,6 +31,50 @@ defmodule MemzWeb.EventController do
       conn
       |> put_status(:ok)
       |> render("show.json", event: event)
+    end
+
+  end
+
+  def images(conn, %{"id" => id, "_json" => input}) do
+
+    user = Plug.current_resource(conn)
+    event = Events.get_event!(id)
+
+    if event.user.id != user.id do
+
+      conn
+      |> put_status(:unauthorized)
+      |> text("Unauthorized access")
+      |> halt()
+
+    else
+
+      {start, length} = :binary.match(input, ";base64,")
+
+      raw = :binary.part(input, start + length, byte_size(input) - start - length)
+
+      {:ok, path} = Briefly.create
+
+      filename =
+        :crypto.hash(:md5, path)
+        |> Base.encode16
+        |> String.downcase
+
+      File.write!(path, Base.decode64!(raw))
+
+      {:ok, image } =
+        %Upload{path: path, filename: filename <> ".png"}
+        |> Events.create_image(event, user)
+
+      broadcast("event:" <> event.id |> Integer.to_string, "new:photo", MemzWeb.ImageView.render("show.json", image: image))
+
+      public_url = Uploader.url({image.file, image})
+
+      conn
+      |> put_status(:ok)
+      |> text(public_url)
+      |> halt()
+
     end
 
   end

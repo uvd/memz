@@ -5,7 +5,10 @@ defmodule Memz.Accounts.User do
 
   schema "users" do
     field :name, :string
+
     has_many :events, Memz.Events.Event
+    has_many :images, Memz.Events.Image
+
   end
 
   def changeset(%User{} = user, attrs) do

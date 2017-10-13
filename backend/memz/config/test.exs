@@ -7,7 +7,7 @@ config :memz, MemzWeb.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, :console, format: "[$level] $message\n"
 
 # Configure your database
 config :memz, Memz.Repo,
