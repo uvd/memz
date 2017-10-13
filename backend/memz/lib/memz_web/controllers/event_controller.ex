@@ -65,7 +65,7 @@ defmodule MemzWeb.EventController do
       {:ok, image } =
         %Upload{path: path, filename: filename <> ".png"}
         |> Events.create_image(event, user)
-        
+
       rendered = MemzWeb.ImageView.render("show.json", image: image)
       id = event.id |> Integer.to_string
 

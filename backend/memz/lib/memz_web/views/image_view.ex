@@ -21,7 +21,8 @@ defmodule MemzWeb.ImageView do
 
 
     %{path: public_url,
-      owner: image.user.name
+      owner: image.user.name,
+      date: image.inserted_at
     }
 
   end
