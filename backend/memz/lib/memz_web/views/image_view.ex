@@ -3,6 +3,7 @@ defmodule MemzWeb.ImageView do
 
   alias MemzWeb.ImageView
   alias Memz.Events.Uploader
+  alias Memz.Repo
 
   def render("index.json", %{images: images}) do
     %{data: render_many(images, ImageView, "image.json")}
@@ -14,11 +15,14 @@ defmodule MemzWeb.ImageView do
 
   def render("image.json", %{image: image}) do
 
+    image = Repo.preload(image, :user)
+
     public_url = Uploader.url({image.file, image})
+
 
     %{path: public_url,
       owner: image.user.name,
-      date: image.created_at
+      date: image.inserted_at
     }
 
   end

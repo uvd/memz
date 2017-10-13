@@ -42,8 +42,8 @@ defmodule Memz.Events do
     Repo.one(
       from event in Event,
       join: u in assoc(event, :user),
-      left_join: i in assoc(event, :images),
-      left_join: o in assoc(i, :user),
+      #left_join: i in assoc(event, :images),
+      #left_join: o in assoc(i, :user),
       where: event.id == ^id,
       preload: [:user, {:images, :user}]
     )

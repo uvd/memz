@@ -43,7 +43,7 @@ defmodule MemzWeb.Router do
     pipe_through [:api, :authenticated]
 
     get "/events/:id/:slug", EventController, :show
-    post "/events/:id/:slug/images", EventController, :images
+    post "/events/:id/:slug/photos", EventController, :images
 
   end
 
