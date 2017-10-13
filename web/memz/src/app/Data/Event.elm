@@ -5,7 +5,7 @@ import Json.Decode as Decode
 
 type alias Photo =
     { path : String
-    , name : String
+    , owner : String
     , date : String
     }
 
@@ -53,5 +53,5 @@ photoDecoder =
     Decode.map3
         Photo
         (Decode.at [ "path" ] Decode.string)
-        (Decode.at [ "name" ] Decode.string)
+        (Decode.at [ "owner" ] Decode.string)
         (Decode.at [ "date" ] Decode.string)

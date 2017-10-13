@@ -20,6 +20,7 @@ import Phoenix.Channel
 import Phoenix.Socket
 import Route exposing (..)
 import Task
+import Regex
 
 
 type alias LocalStorageRecord =
@@ -104,7 +105,7 @@ update msg model =
                     "event:" ++ toString response.id
 
                 payload =
-                    Encode.object [ ( "guardian_token", Encode.string (Maybe.withDefault "" model.token) ) ]
+                    Encode.object [ ( "guardian_token", stripBearer >> Encode.string <| (Maybe.withDefault "" model.token) ) ]
 
                 channel =
                     Phoenix.Channel.init channelId
@@ -185,16 +186,29 @@ update msg model =
                 ( { model | currentEvent = updatedCurrentEvent }, Task.attempt Messages.UploadPhoto task )
 
         Messages.UploadPhoto (Err err) ->
-            let
-                currentEvent =
-                    model.currentEvent
-
-                updatedCurrentEvent =
-                    { currentEvent | status = Idle }
-            in
-                Debug.log "Error encoding photo" ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+            Debug.log "Error encoding photo" ( model, Cmd.none )
 
         Messages.UploadPhoto (Ok values) ->
+            case ( model.currentEvent.event, model.token ) of
+                ( Just event, Just token ) ->
+                    let
+                        { id, slug } =
+                            event
+
+                        firstPhoto =
+                            (List.head values)
+                    in
+                        case firstPhoto of
+                            Nothing ->
+                                ( model, Cmd.none )
+
+                            Just value ->
+                                ( model, postPhoto value id slug model.baseUrl token )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        Messages.PostPhotoResponse (Err err) ->
             let
                 currentEvent =
                     model.currentEvent
@@ -202,7 +216,17 @@ update msg model =
                 updatedCurrentEvent =
                     { currentEvent | status = Idle }
             in
-                Debug.log (toString values) ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+                Debug.log "Error uplodaing photo" ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+
+        Messages.PostPhotoResponse (Ok _) ->
+            let
+                currentEvent =
+                    model.currentEvent
+
+                updatedCurrentEvent =
+                    { currentEvent | status = Idle }
+            in
+                ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
 
 
 commandForRoute : Route -> Maybe String -> String -> Cmd Msg
@@ -218,6 +242,36 @@ commandForRoute route token baseUrl =
 
         _ ->
             Cmd.none
+
+
+stripBearer : String -> String
+stripBearer fullToken =
+    let
+        regex =
+            (Regex.regex " ")
+
+        splitToken =
+            Regex.split (Regex.AtMost 1) regex fullToken
+    in
+        case splitToken of
+            [ _, token ] ->
+                token
+
+            _ ->
+                ""
+
+
+postPhoto : Encode.Value -> Int -> String -> String -> String -> Cmd Msg
+postPhoto encodedPhoto id slug baseUrl token =
+    let
+        url =
+            baseUrl ++ "/v1/events/" ++ toString id ++ "/" ++ slug ++ "/images"
+    in
+        HttpBuilder.post url
+            |> withBody (Http.jsonBody encodedPhoto)
+            |> withHeader "Authorization" token
+            |> withExpect (Http.expectStringResponse (always (Ok ())))
+            |> send Messages.PostPhotoResponse
 
 
 getRequestForEvent : Int -> String -> String -> String -> Cmd Msg

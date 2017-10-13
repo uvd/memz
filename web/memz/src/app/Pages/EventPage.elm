@@ -39,7 +39,7 @@ renderPhoto photo =
         [ img [ src photo.path ] []
         , div []
             [ span []
-                [ text photo.name ]
+                [ text photo.owner ]
             , span []
                 [ text photo.date ]
             ]

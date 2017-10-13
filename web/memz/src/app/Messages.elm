@@ -26,3 +26,4 @@ type Msg
     | EventChannelJoined Json.Encode.Value
     | PhotoSelected (List NativeFile)
     | UploadPhoto (Result FileReader.Error (List Json.Encode.Value))
+    | PostPhotoResponse (Result Http.Error ())
