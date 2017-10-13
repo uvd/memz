@@ -32,7 +32,7 @@ type alias CurrentEvent =
     }
 
 
-type alias Image =
+type alias PhotoRequestBody =
     { photo : String
     }
 
@@ -63,6 +63,6 @@ photoDecoder =
         (Decode.at [ "date" ] Decode.string)
 
             
-imageEncoder : Image -> Json.Encode.Value
+imageEncoder : PhotoRequestBody -> Json.Encode.Value
 imageEncoder { photo } =
     Json.Encode.object [ ( "photo", Json.Encode.string photo ) ]

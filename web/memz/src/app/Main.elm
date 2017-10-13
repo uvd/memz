@@ -270,10 +270,10 @@ postPhoto : String -> Int -> String -> String -> String -> Cmd Msg
 postPhoto encodedPhoto id slug baseUrl token =
     let
         url =
-            baseUrl ++ "/v1/events/" ++ toString id ++ "/" ++ slug ++ "/images"
+            baseUrl ++ "/v1/events/" ++ toString id ++ "/" ++ slug ++ "/photos"
     in
         HttpBuilder.post url
-            |> withBody (imageEncoder {photo = encodedPhoto} |> Http.jsonBody)
+            |> withBody (PhotoRequestBody encodedPhoto |> imageEncoder |> Http.jsonBody)
             |> withHeader "Authorization" token
             |> withExpect (Http.expectStringResponse (always (Ok ())))
             |> send Messages.PostPhotoResponse
