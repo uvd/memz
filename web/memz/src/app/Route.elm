@@ -2,6 +2,7 @@ module Route exposing (..)
 
 import UrlParser exposing ((</>), Parser, int, map, oneOf, parseHash, s, string)
 import Navigation
+import Utilities exposing (..)
 
 
 type PublicRoute
@@ -31,6 +32,6 @@ getRoute location =
 route : Parser (Route -> a) a
 route =
     oneOf
-        [ UrlParser.map (\id slug -> Private (EventRoute id slug)) (UrlParser.s "event" </> int </> string)
+        [ UrlParser.map (Private <<< EventRoute) (UrlParser.s "event" </> int </> string)
         , UrlParser.map (Public CreateEventRoute) (UrlParser.s "create-event")
         ]
