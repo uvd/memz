@@ -63,6 +63,6 @@ initialModel flags =
     , currentEvent = initialCurrentEvent
     , route = Public HomePageRoute
     , token = Nothing
-    , phxSocket = Phoenix.Socket.init "ws://localhost:4000/socket/websocket"
+    , phxSocket = Phoenix.Socket.init "ws://192.168.1.78:4000/socket/websocket"
     , baseUrl = flags.baseUrl
     }
