@@ -5,7 +5,6 @@ import Debug exposing (log)
 import Dict exposing (get)
 import FileReader exposing (..)
 import Html exposing (..)
-import Html.Attributes exposing (..)
 import Http exposing (Error)
 import HttpBuilder exposing (..)
 import Json.Decode as Decode

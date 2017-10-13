@@ -21,12 +21,8 @@ type Route
 
 getRoute : Navigation.Location -> Route
 getRoute location =
-    case parseHash route location of
-        Just route ->
-            route
-
-        _ ->
-            Public HomePageRoute
+    parseHash route location
+        |> Maybe.withDefault (Public HomePageRoute)
 
 
 route : Parser (Route -> a) a
