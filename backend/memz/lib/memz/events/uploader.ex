@@ -1,6 +1,9 @@
 defmodule Memz.Events.Uploader do
 
   use Arc.Definition
+  use Arc.Ecto.Definition
+
+  alias Memz.Repo
 
   @versions [:original, :thumb]
   @extension_whitelist ~w(.jpg .jpeg .gif .png)
@@ -13,19 +16,29 @@ defmodule Memz.Events.Uploader do
   end
 
   def transform(:thumb, _) do
-    {:convert, "-thumbnail 100x100^ -gravity center -extent 100x100 -format png", :png}
+    {:convert, "-geometry 800x -format png", :png}
   end
 
-  def filename(version, _) do
-    version
+  # To retain the original filename, but prefix the version and user id:
+  def filename(version, {file, scope}) do
+    file_name = Path.basename(file.file_name, Path.extname(file.file_name))
+    "#{version}_#{file_name}"
   end
 
-  def storage_dir(_, {file, user}) do
-    "event-images/#{user.id}"
+  # To make the destination file the same as the version:
+  def filename(version, _), do: version
+
+  def storage_dir(version, {file, image}) do
+    image = Repo.preload(image, :event)
+    Integer.to_string(image.event.id)
   end
 
   def default_url(:thumb) do
     "https://placehold.it/100x100"
+  end
+
+  def s3_object_headers(version, {file, scope}) do
+    [content_type: Plug.MIME.path(file.file_name)] # for "image.png", would produce: "image/png"
   end
 
 end

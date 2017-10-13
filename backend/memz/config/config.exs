@@ -33,7 +33,8 @@ config :cors_plug,
 
 config :arc,
        storage: Arc.Storage.S3, # or Arc.Storage.Local
-       bucket: {:system, "AWS_S3_BUCKET"} # if using Amazon S3
+       bucket: {:system, "AWS_S3_BUCKET"}, # if using Amazon S3
+       asset_host: "http://localhost:9000/event-images"
 
 config :ex_aws,
        access_key_id: ["AKIAIZS7ZZEIGYWFI5RQ", :instance_role],

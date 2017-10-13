@@ -1,6 +1,8 @@
 defmodule MemzWeb.EventController do
   use MemzWeb, :controller
 
+  alias Plug.Upload, as: Upload
+
   alias Memz.Events
   alias Memz.Events.Event
   alias Memz.Accounts
@@ -33,35 +35,44 @@ defmodule MemzWeb.EventController do
 
   def images(conn, %{"id" => id, "_json" => input}) do
 
-
     user = Plug.current_resource(conn)
+    event = Events.get_event!(id)
+
+    if event.user.id != user.id do
+
+      conn
+      |> put_status(:unauthorized)
+      |> text("Unauthorized access")
+      |> halt()
+
+    else
+
+      {start, length} = :binary.match(input, ";base64,")
+
+      raw = :binary.part(input, start + length, byte_size(input) - start - length)
+
+      {:ok, path} = Briefly.create
+
+      filename =
+        :crypto.hash(:md5, path)
+        |> Base.encode16
+        |> String.downcase
+
+      File.write!(path, Base.decode64!(raw))
+
+      {:ok, image } =
+        %Upload{path: path, filename: filename <> ".png"}
+        |> Events.create_image(event, user)
 
 
-    {start, length} = :binary.match(input, ";base64,")
-    raw = :binary.part(input, start + length, byte_size(input) - start - length)
+      public_url = Uploader.url({image.file, image})
 
-    {:ok, path} = Briefly.create
+      conn
+      |> put_status(:ok)
+      |> text(public_url)
+      |> halt()
 
-    File.write!(path, Base.decode64!(raw))
-
-
-    {:ok, name} = Uploader.store({path, user})
-
-
-#    filename = :crypto.hash(:md5, path) |> Base.encode16 |> String.downcase
-
-#    path
-#    |> S3.Upload.stream_file
-#    |> S3.upload("event-images", filename <> ".jpg")
-#    |> ExAws.request!
-
-
-
-
-    conn
-    |> put_status(:ok)
-    |> text(name)
-    |> halt()
+    end
 
   end
 

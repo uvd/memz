@@ -35,7 +35,6 @@ defmodule MemzWeb.Router do
      pipe_through :api
 
      resources "/events", EventController, only: [:create]
-     post "/events/:id/:slug/images", EventController, :images
 
   end
 
@@ -43,7 +42,8 @@ defmodule MemzWeb.Router do
   scope "/v1", MemzWeb do
     pipe_through [:api, :authenticated]
 
-    get "/events/:id/*anything", EventController, :show
+    get "/events/:id/:slug", EventController, :show
+    post "/events/:id/:slug/images", EventController, :images
 
   end
 

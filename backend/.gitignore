@@ -1,1 +1,3 @@
 memz.tar.gz
+s3/.minio.sys/buckets/event-images/!policy.json
+s3/.minio.sys/buckets/event-images/*

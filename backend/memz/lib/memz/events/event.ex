@@ -15,6 +15,7 @@ defmodule Memz.Events.Event do
     field :slug, NameSlug.Type
 
     belongs_to :user, User
+    has_many :images, Memz.Events.Image
 
     timestamps()
   end
