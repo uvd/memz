@@ -197,13 +197,18 @@ update msg model =
 
                         firstPhoto =
                             (List.head values)
+
                     in
                         case firstPhoto of
                             Nothing ->
                                 ( model, Cmd.none )
 
                             Just value ->
-                                ( model, postPhoto value id slug model.baseUrl token )
+                                case Decode.decodeValue Decode.string value of
+                                    Ok photo ->
+                                        ( model, postPhoto photo id slug model.baseUrl token )
+                                    Err err ->
+                                        (model, Cmd.none)
 
                 _ ->
                     ( model, Cmd.none )
@@ -261,14 +266,14 @@ stripBearer fullToken =
                 ""
 
 
-postPhoto : Encode.Value -> Int -> String -> String -> String -> Cmd Msg
+postPhoto : String -> Int -> String -> String -> String -> Cmd Msg
 postPhoto encodedPhoto id slug baseUrl token =
     let
         url =
             baseUrl ++ "/v1/events/" ++ toString id ++ "/" ++ slug ++ "/images"
     in
         HttpBuilder.post url
-            |> withBody (Http.jsonBody encodedPhoto)
+            |> withBody (imageEncoder {photo = encodedPhoto} |> Http.jsonBody)
             |> withHeader "Authorization" token
             |> withExpect (Http.expectStringResponse (always (Ok ())))
             |> send Messages.PostPhotoResponse

@@ -1,6 +1,7 @@
 module Data.Event exposing (..)
 
 import Json.Decode as Decode
+import Json.Encode
 
 
 type alias Photo =
@@ -31,6 +32,11 @@ type alias CurrentEvent =
     }
 
 
+type alias Image =
+    { photo : String
+    }
+
+
 
 -- SERIALISATION --
 
@@ -55,3 +61,8 @@ photoDecoder =
         (Decode.at [ "path" ] Decode.string)
         (Decode.at [ "owner" ] Decode.string)
         (Decode.at [ "date" ] Decode.string)
+
+            
+imageEncoder : Image -> Json.Encode.Value
+imageEncoder { photo } =
+    Json.Encode.object [ ( "photo", Json.Encode.string photo ) ]
