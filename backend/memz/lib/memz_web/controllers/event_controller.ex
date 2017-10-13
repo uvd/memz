@@ -32,20 +32,56 @@ defmodule MemzWeb.EventController do
   end
 
   def images(conn, %{"id" => id, "_json" => input}) do
+    user = %{id: 1}
 
+    # length validation
+    # list = conn.req_headers
+    # # length = Enum.map(list, fn (x) -> x["content-length"] end)
+    # # content_length = Enum.fetch(list, 12)
+    # # content_length = elem(content_length,1)
+    # # size = elem(content_length,1)
+    # # {size, _} = Integer.parse(size)
+    # # if size > size_limit do
+    # #   halt
+    # # end
+    # # IO.inspect size
+    #
+    # IO.inspect list
+    # {:ok, content_length} = Enum.fetch(list, 12)
+    # size = elem(content_length,1)
+    # {size, _} = Integer.parse(size)
+    # if size > 8000000 do
+    #   conn
+    #   |> put_status(:ok)
+    #   |> text("File size is too big")
+    #   |> halt()
+    # end
 
-    user = Plug.current_resource(conn)
 
 
     {start, length} = :binary.match(input, ";base64,")
+
     raw = :binary.part(input, start + length, byte_size(input) - start - length)
 
-    {:ok, path} = Briefly.create
+    {start2, length2} = :binary.match(input, "data:")
+    mime_type = :binary.part(input, start2 + length2, start - length2)
 
-    File.write!(path, Base.decode64!(raw))
+    {}String.split(input, ";base64")
+    with ["image", ext] = String.split(mime_type, "/") do
+      {:ok, path} = Briefly.create
 
+      path = path <> "." <> ext
 
-    {:ok, name} = Uploader.store({path, user})
+      File.write!(path, Base.decode64!(raw))
+
+      {:ok, name} = Uploader.store({path, user})
+
+      conn
+      |> put_status(:ok)
+      |> text(name)
+      |> halt()
+    end
+
 
 
 #    filename = :crypto.hash(:md5, path) |> Base.encode16 |> String.downcase
@@ -58,13 +94,7 @@ defmodule MemzWeb.EventController do
 
 
 
-    conn
-    |> put_status(:ok)
-    |> text(name)
-    |> halt()
-
   end
-
   @doc """
 
   Create a new event but also create a new user with the name sent as "owner"
