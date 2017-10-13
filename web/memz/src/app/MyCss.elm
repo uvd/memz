@@ -21,6 +21,8 @@ css =
             , textAlign center
             , color (hex "0BC5C4")
             , backgroundColor (rgb 255 255 255)
+            , boxSizing borderBox
+            , margin (px 0)
             ]
         , id Page
             [ backgroundColor (rgb 200 128 64)
