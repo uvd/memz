@@ -168,8 +168,12 @@ update msg model =
 
                         updatedEvent =
                             { currentEvent | photos = photos }
+
+                        updatedSocket =
+                            model.phxSocket
+                                |> Phoenix.Socket.on "new:photo" ("event:" ++ toString event.id) Messages.ReceiveNewPhoto
                     in
-                    ( { model | currentEvent = updatedEvent }, Cmd.none )
+                    ( { model | currentEvent = updatedEvent, phxSocket = updatedSocket }, Cmd.none )
 
         Messages.PhotoSelected nativeFiles ->
             let
@@ -220,6 +224,20 @@ update msg model =
                     { currentEvent | status = Idle }
             in
             ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+
+        Messages.ReceiveNewPhoto value ->
+            case Decode.decodeValue photoDecoder value of
+                Ok photo ->
+                    let
+                        currentEvent =
+                            model.currentEvent
+
+                        updatedCurrentEvent =
+                            { currentEvent | photos = photo :: currentEvent.photos }
+                    in
+                    Debug.log "Photo received" ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+                Err err ->
+                    Debug.log (toString err) (model, Cmd.none)
 
 
 commandForRoute : Route -> Maybe String -> String -> Cmd Msg

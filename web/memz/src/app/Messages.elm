@@ -27,3 +27,4 @@ type Msg
     | PhotoSelected (List NativeFile)
     | UploadPhoto (Result FileReader.Error (List Json.Encode.Value))
     | PostPhotoResponse (Result Http.Error ())
+    | ReceiveNewPhoto Json.Encode.Value
