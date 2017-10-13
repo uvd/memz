@@ -18,9 +18,9 @@ import Pages.EventPage as EventPage
 import Pages.HomePage as HomePage
 import Phoenix.Channel
 import Phoenix.Socket
+import Regex
 import Route exposing (..)
 import Task
-import Regex
 
 
 type alias LocalStorageRecord =
@@ -46,7 +46,7 @@ updateNewEvent update m =
         updatedNewEvent =
             update m.newEvent
     in
-        { m | newEvent = updatedNewEvent }
+    { m | newEvent = updatedNewEvent }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -72,7 +72,7 @@ update msg model =
                 eventUrl =
                     "/#/event/" ++ toString id ++ "/" ++ slug
             in
-                ( { model | token = Just header }, Cmd.batch [ setLocalStorageItem ( "authToken", header ), Navigation.newUrl <| eventUrl ] )
+            ( { model | token = Just header }, Cmd.batch [ setLocalStorageItem ( "authToken", header ), Navigation.newUrl <| eventUrl ] )
 
         Messages.CreateEventResponse (Result.Err err) ->
             case err of
@@ -84,12 +84,12 @@ update msg model =
                         updatedModel =
                             { model | newEvent = initialNewEvent }
                     in
-                        case decodedResponse of
-                            Ok serverErrors ->
-                                ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
+                    case decodedResponse of
+                        Ok serverErrors ->
+                            ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
 
-                            Err _ ->
-                                ( updatedModel, Cmd.none )
+                        Err _ ->
+                            ( updatedModel, Cmd.none )
 
                 Http.BadPayload err _ ->
                     Debug.log ("BAD PAYLOAD ERROR" ++ err)
@@ -105,7 +105,7 @@ update msg model =
                     "event:" ++ toString response.id
 
                 payload =
-                    Encode.object [ ( "guardian_token", stripBearer >> Encode.string <| (Maybe.withDefault "" model.token) ) ]
+                    Encode.object [ ( "guardian_token", stripBearer >> Encode.string <| Maybe.withDefault "" model.token ) ]
 
                 channel =
                     Phoenix.Channel.init channelId
@@ -121,7 +121,7 @@ update msg model =
                 updatedEvent =
                     { currentEvent | event = Just response }
             in
-                ( { model | currentEvent = updatedEvent, phxSocket = phxSocket }, Cmd.map Messages.PhoenixMsg phxCmd )
+            ( { model | currentEvent = updatedEvent, phxSocket = phxSocket }, Cmd.map Messages.PhoenixMsg phxCmd )
 
         Messages.GetEventResponse (Result.Err err) ->
             Debug.log "Error getting event"
@@ -148,28 +148,28 @@ update msg model =
                 ( phxSocket, phxCmd ) =
                     Phoenix.Socket.update msg model.phxSocket
             in
-                ( { model | phxSocket = phxSocket }
-                , Cmd.map Messages.PhoenixMsg phxCmd
-                )
+            ( { model | phxSocket = phxSocket }
+            , Cmd.map Messages.PhoenixMsg phxCmd
+            )
 
         Messages.EventChannelJoined jsonValue ->
             let
                 photos =
                     Result.withDefault [] <| Decode.decodeValue (Decode.list photoDecoder) jsonValue
             in
-                case model.currentEvent.event of
-                    Nothing ->
-                        ( model, Cmd.none )
+            case model.currentEvent.event of
+                Nothing ->
+                    ( model, Cmd.none )
 
-                    Just event ->
-                        let
-                            currentEvent =
-                                model.currentEvent
+                Just event ->
+                    let
+                        currentEvent =
+                            model.currentEvent
 
-                            updatedEvent =
-                                { currentEvent | photos = photos }
-                        in
-                            ( { model | currentEvent = updatedEvent }, Cmd.none )
+                        updatedEvent =
+                            { currentEvent | photos = photos }
+                    in
+                    ( { model | currentEvent = updatedEvent }, Cmd.none )
 
         Messages.PhotoSelected nativeFiles ->
             let
@@ -183,32 +183,20 @@ update msg model =
                 updatedCurrentEvent =
                     { currentEvent | status = Uploading }
             in
-                ( { model | currentEvent = updatedCurrentEvent }, Task.attempt Messages.UploadPhoto task )
+            ( { model | currentEvent = updatedCurrentEvent }, Task.attempt Messages.UploadPhoto task )
 
         Messages.UploadPhoto (Err err) ->
             Debug.log "Error encoding photo" ( model, Cmd.none )
 
         Messages.UploadPhoto (Ok values) ->
-            case ( model.currentEvent.event, model.token ) of
-                ( Just event, Just token ) ->
-                    let
-                        { id, slug } =
-                            event
-
-                        firstPhoto =
-                            (List.head values)
-
-                    in
-                        case firstPhoto of
-                            Nothing ->
-                                ( model, Cmd.none )
-
-                            Just value ->
-                                case Decode.decodeValue Decode.string value of
-                                    Ok photo ->
-                                        ( model, postPhoto photo id slug model.baseUrl token )
-                                    Err err ->
-                                        (model, Cmd.none)
+            let
+                maybePhoto =
+                    List.head values
+                        |> Maybe.andThen (Decode.decodeValue Decode.string >> Result.toMaybe)
+            in
+            case ( model.currentEvent.event, model.token, maybePhoto ) of
+                ( Just { id, slug }, Just token, Just photo ) ->
+                    ( model, postPhoto photo id slug model.baseUrl token )
 
                 _ ->
                     ( model, Cmd.none )
@@ -221,7 +209,7 @@ update msg model =
                 updatedCurrentEvent =
                     { currentEvent | status = Idle }
             in
-                Debug.log "Error uplodaing photo" ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+            Debug.log "Error uplodaing photo" ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
 
         Messages.PostPhotoResponse (Ok _) ->
             let
@@ -231,7 +219,7 @@ update msg model =
                 updatedCurrentEvent =
                     { currentEvent | status = Idle }
             in
-                ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+            ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
 
 
 commandForRoute : Route -> Maybe String -> String -> Cmd Msg
@@ -253,17 +241,17 @@ stripBearer : String -> String
 stripBearer fullToken =
     let
         regex =
-            (Regex.regex " ")
+            Regex.regex " "
 
         splitToken =
             Regex.split (Regex.AtMost 1) regex fullToken
     in
-        case splitToken of
-            [ _, token ] ->
-                token
+    case splitToken of
+        [ _, token ] ->
+            token
 
-            _ ->
-                ""
+        _ ->
+            ""
 
 
 postPhoto : String -> Int -> String -> String -> String -> Cmd Msg
@@ -272,11 +260,11 @@ postPhoto encodedPhoto id slug baseUrl token =
         url =
             baseUrl ++ "/v1/events/" ++ toString id ++ "/" ++ slug ++ "/photos"
     in
-        HttpBuilder.post url
-            |> withBody (PhotoRequestBody encodedPhoto |> imageEncoder |> Http.jsonBody)
-            |> withHeader "Authorization" token
-            |> withExpect (Http.expectStringResponse (always (Ok ())))
-            |> send Messages.PostPhotoResponse
+    HttpBuilder.post url
+        |> withBody (PhotoRequestBody encodedPhoto |> imageEncoder |> Http.jsonBody)
+        |> withHeader "Authorization" token
+        |> withExpect (Http.expectStringResponse (always (Ok ())))
+        |> send Messages.PostPhotoResponse
 
 
 getRequestForEvent : Int -> String -> String -> String -> Cmd Msg
@@ -285,10 +273,10 @@ getRequestForEvent id slug token baseUrl =
         url =
             baseUrl ++ "/v1/events/" ++ toString id ++ "/" ++ slug
     in
-        HttpBuilder.get url
-            |> withHeader "Authorization" token
-            |> withExpect (Http.expectJson Data.Event.decoder)
-            |> send Messages.GetEventResponse
+    HttpBuilder.get url
+        |> withHeader "Authorization" token
+        |> withExpect (Http.expectJson Data.Event.decoder)
+        |> send Messages.GetEventResponse
 
 
 onLocationChange : Model -> Navigation.Location -> ( Model, Cmd Msg )
@@ -297,15 +285,15 @@ onLocationChange model location =
         newRoute =
             getRoute location
     in
-        case ( newRoute, model.token ) of
-            ( Public r, _ ) ->
-                ( { model | route = newRoute }, commandForRoute newRoute model.token model.baseUrl )
+    case ( newRoute, model.token ) of
+        ( Public r, _ ) ->
+            ( { model | route = newRoute }, commandForRoute newRoute model.token model.baseUrl )
 
-            ( Private r, Just token ) ->
-                ( { model | route = newRoute }, commandForRoute newRoute model.token model.baseUrl )
+        ( Private r, Just token ) ->
+            ( { model | route = newRoute }, commandForRoute newRoute model.token model.baseUrl )
 
-            ( Private r, Nothing ) ->
-                ( { model | route = newRoute }, commandForAuthToken )
+        ( Private r, Nothing ) ->
+            ( { model | route = newRoute }, commandForAuthToken )
 
 
 commandForAuthToken : Cmd Msg
@@ -336,18 +324,18 @@ getCreateEventRequest url body =
                         body =
                             Decode.decodeString Data.Event.decoder r.body
                     in
-                        case ( header, body ) of
-                            ( Just header, Ok body ) ->
-                                Ok ( header, body )
+                    case ( header, body ) of
+                        ( Just header, Ok body ) ->
+                            Ok ( header, body )
 
-                            ( Just _, Err error ) ->
-                                Err error
+                        ( Just _, Err error ) ->
+                            Err error
 
-                            ( Nothing, Ok _ ) ->
-                                Err "No authorization header"
+                        ( Nothing, Ok _ ) ->
+                            Err "No authorization header"
 
-                            ( Nothing, Err error ) ->
-                                Err ("No authorization header, and " ++ error)
+                        ( Nothing, Err error ) ->
+                            Err ("No authorization header, and " ++ error)
                 )
         , timeout = Nothing
         , withCredentials = False
@@ -368,7 +356,7 @@ bodyEncoder data =
                   )
                 ]
     in
-        Encode.encode 0 encodedValue
+    Encode.encode 0 encodedValue
 
 
 errorResponseDecoder : Decode.Decoder (List ServerError)
