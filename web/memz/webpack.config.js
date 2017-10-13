@@ -32,29 +32,36 @@ const commonConfig = {
     },
     module: {
         rules: [
-            {
-                test: /\.scss$/,
-                use: [
-                    "style-loader",
-                    "css-loader",
-                    "sass-loader"
-                ]
-            },
-            {
-                test: /\.css$/,
-                use: [
-                    'style-loader',
-                    'css-loader?modules'
-                ],
-            },
+            // {
+            //     test: /\.scss$/,
+            //     use: [
+            //         "style-loader",
+            //         "css-loader",
+            //         "sass-loader"
+            //     ]
+            // },
+            // {
+            //     test: /\.css$/,
+            //     use: [
+            //         'style-loader',
+            //         'css-loader?modules'
+            //     ],
+            // }
             // {
             //     test: /\.ts$/,
             //     use: [
             //         'awesome-typescript-loader'
             //     ]
             // }
+            {
+			    test: /\.svg/,
+			    use: {
+			        loader: 'svg-url-loader',
+			        options: {}
+			    }
+			}
         ],
-        noParse: /\.elm$/
+        noParse: /^((?!Stylesheet).)*\.elm.*$/,
     }
 };
 
@@ -112,11 +119,25 @@ if (prod) {
             rules: [
                 {
                     test: /\.elm$/,
-                    exclude: [/elm-stuff/, /node_modules/],
+                    exclude: [/elm-stuff/, /node_modules/, /Stylesheets\.elm$/],
                     loader: 'elm-hot-loader!elm-webpack-loader?verbose=true&warn=true&debug=true&pathToMake=./node_modules/.bin/elm-make'
+                },
+                {
+                    test: /Stylesheets\.elm$/,
+                    use: ExtractTextPlugin.extract({
+                        fallback: "style-loader",
+                        use: [
+                          'css-loader',
+                          'elm-css-webpack-loader'
+                        ]
+                    })
                 }
             ]
-        }
+        },
+        plugins: [
+            new webpack.optimize.OccurrenceOrderPlugin(),
+            new ExtractTextPlugin( 'static/css/main.css' )
+        ]
     });
 
 }

@@ -18,7 +18,7 @@ view =
             [ img [ Html.Attributes.src "assets/logo.svg" ] []
             ]
         , div []
-            [ p [] [ Html.text "Long term memories made in real time" ]
+            [ p [ class [ ValueProp ] ] [ Html.text "Long term memories made in real time" ]
             ]
         , div []
             [ a [ href "#/create-event", class [ CreateEventBtn ] ] [ Html.text "Create an event" ]

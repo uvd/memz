@@ -6,6 +6,12 @@ import Html.Attributes exposing (..)
 import Messages exposing (Msg)
 import Model exposing (..)
 import FileReader
+import Styles.EventPageCss exposing (..)
+import Html.CssHelpers exposing (withNamespace)
+
+
+{ id, class, classList } =
+    Html.CssHelpers.withNamespace "event"
 
 
 view : Model -> Html Msg

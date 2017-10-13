@@ -34,6 +34,11 @@ body {
     padding: 12px 20px;
 }
 
+.homepageValueProp {
+    max-width: 60%;
+    margin: auto;
+}
+
 .homepagePageWrapper {
     display: flex;
     flex-direction: column;

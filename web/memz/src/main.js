@@ -1,4 +1,5 @@
-require('./styles.scss');
+
+require('./app/Stylesheets')
 
 const config = require('config');
 

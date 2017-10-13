@@ -8,6 +8,7 @@ import Css.Namespace exposing (namespace)
 type CssClasses
     = CreateEventBtn
     | PageWrapper
+    | ValueProp
 
 
 css =
@@ -18,6 +19,10 @@ css =
             , display inlineBlock
             , textDecoration none
             , padding2 (px 12) (px 20)
+            ]
+        , class ValueProp
+            [ maxWidth (pct 60)
+            , margin auto
             ]
         , class PageWrapper
             [ displayFlex
