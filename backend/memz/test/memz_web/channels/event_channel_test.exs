@@ -5,6 +5,8 @@ defmodule MemzWeb.EventChannelTest do
   alias Memz.Accounts
   alias MemzWeb.Guardian
   alias Memz.Events
+  alias Memz.Events.Image
+  alias Memz.Repo
 
   describe "joining an event channel" do
 
@@ -12,10 +14,15 @@ defmodule MemzWeb.EventChannelTest do
 
       {:ok, user } = Accounts.create_user(%{"name" => "Eddy"})
       {:ok, token, _} = Guardian.encode_and_sign(user)
-
       {:ok, event } = Events.create_event(%{ "name" => "Eddys Birthday Party", "end_date" => ~N[2020-04-17 14:00:00.000000], "user_id" => user.id })
 
-      {:ok, token: token, event_id: event.id |> Integer.to_string}
+      image_attrs = %{"file" => "test.png", "user_id" => user.id, "event_id" => event.id }
+
+      {:ok, image } = %Image{}
+      |> Image.dummy_changeset(image_attrs)
+      |> Repo.insert()
+
+      {:ok, token: token, event_id: event.id |> Integer.to_string, images: [image] }
     end
 
 
@@ -37,14 +44,14 @@ defmodule MemzWeb.EventChannelTest do
       assert reason == "unauthorized"
     end
 
-    test "it should reply with the list of images in the event on join", %{token: token, event_id: event_id} do
+    test "it should reply with the list of images in the event on join", %{token: token, event_id: event_id, images: images} do
 
       {:ok, initial_payload, _} =
 
         socket()
         |> subscribe_and_join(EventChannel, "event:" <> event_id, %{"guardian_token" => token})
 
-      assert initial_payload == EventChannel.images()
+      assert initial_payload == images
     end
 
   end

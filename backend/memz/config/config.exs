@@ -31,6 +31,22 @@ config :memz, MemzWeb.Guardian,
 config :cors_plug,
        expose: ["Authorization"]
 
+config :arc,
+       storage: Arc.Storage.S3, # or Arc.Storage.Local
+       bucket: {:system, "AWS_S3_BUCKET"}, # if using Amazon S3
+       asset_host: "http://localhost:9000/event-images"
+
+config :ex_aws,
+       access_key_id: ["AKIAIZS7ZZEIGYWFI5RQ", :instance_role],
+       secret_access_key: ["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", :instance_role],
+       region: "eu-west-2",
+       s3: [
+          scheme: "http://",
+          host: "minio",
+          port: 9000,
+          region: "eu-west-2"
+       ]
+
 if Mix.env == :dev do
   config :mix_test_watch,
      tasks: [

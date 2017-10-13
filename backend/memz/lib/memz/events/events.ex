@@ -7,6 +7,7 @@ defmodule Memz.Events do
   alias Memz.Repo
 
   alias Memz.Events.Event
+  alias Memz.Events.Image
   alias Memz.Accounts.User
 
   @doc """
@@ -41,8 +42,10 @@ defmodule Memz.Events do
     Repo.one(
       from event in Event,
       join: u in assoc(event, :user),
+      left_join: i in assoc(event, :images),
+      left_join: o in assoc(i, :user),
       where: event.id == ^id,
-      preload: [:user]
+      preload: [:user, {:images, :user}]
     )
 
   end
@@ -63,6 +66,28 @@ defmodule Memz.Events do
 
     %Event{}
       |> Event.changeset(attrs)
+      |> Repo.insert()
+
+  end
+
+
+  @doc """
+  Creates a image for a user and an event.
+
+  ## Examples
+
+      iex> create_image(%{field: value}, event, user)
+      {:ok, %Image{}}
+
+      iex> create_image(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_image(file, event, user) do
+
+
+    %Image{}
+      |> Image.changeset(%{file: file, user_id: user.id, event_id: event.id})
       |> Repo.insert()
 
   end
