@@ -35,13 +35,16 @@ defmodule MemzWeb.Router do
      pipe_through :api
 
      resources "/events", EventController, only: [:create]
-   end
+     post "/events/:id/:slug/images", EventController, :images
+
+  end
 
   # Other scopes may use custom stacks.
   scope "/v1", MemzWeb do
     pipe_through [:api, :authenticated]
 
     get "/events/:id/*anything", EventController, :show
+
   end
 
 end

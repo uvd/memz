@@ -21,7 +21,7 @@ defmodule Memz.Events.Uploader do
   end
 
   def storage_dir(_, {file, user}) do
-    "uploads/avatars/#{user.id}"
+    "event-images/#{user.id}"
   end
 
   def default_url(:thumb) do

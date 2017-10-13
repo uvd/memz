@@ -1,6 +1,7 @@
 %{"arc": {:hex, :arc, "0.8.0", "bb7cf8ea50f30f9c2bb357270c074def42a7ec6a3b4605be731cc5faf8fde6fd", [:mix], [{:ex_aws, "~> 1.1", [hex: :ex_aws, repo: "hexpm", optional: true]}, {:httpoison, "~> 0.11", [hex: :httpoison, repo: "hexpm", optional: false]}, {:poison, "~> 2.2 or ~> 3.1", [hex: :poison, repo: "hexpm", optional: true]}, {:sweet_xml, "~> 0.6", [hex: :sweet_xml, repo: "hexpm", optional: true]}], "hexpm"},
   "arc_ecto": {:hex, :arc_ecto, "0.7.0", "428ed7ea4ed0be8996d8fc6e9f651d3e26fe9c9063f26cbf6731c865369845d3", [], [{:arc, "~> 0.8.0", [hex: :arc, repo: "hexpm", optional: false]}, {:ecto, "~> 2.0", [hex: :ecto, repo: "hexpm", optional: false]}], "hexpm"},
   "base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [], [], "hexpm"},
+  "briefly": {:hex, :briefly, "0.3.0", "16e6b76d2070ebc9cbd025fa85cf5dbaf52368c4bd896fb482b5a6b95a540c2f", [], [], "hexpm"},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [], [], "hexpm"},
   "certifi": {:hex, :certifi, "2.0.0", "a0c0e475107135f76b8c1d5bc7efb33cd3815cb3cf3dea7aefdd174dabead064", [], [], "hexpm"},
   "combine": {:hex, :combine, "0.10.0", "eff8224eeb56498a2af13011d142c5e7997a80c8f5b97c499f84c841032e429f", [], [], "hexpm"},

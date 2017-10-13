@@ -38,7 +38,7 @@ config :arc,
 config :ex_aws,
        access_key_id: ["AKIAIZS7ZZEIGYWFI5RQ", :instance_role],
        secret_access_key: ["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", :instance_role],
-       region: "eu-central-1",
+       region: "eu-west-2",
        s3: [
           scheme: "http://",
           host: "minio",

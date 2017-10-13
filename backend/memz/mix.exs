@@ -51,6 +51,7 @@ defmodule Memz.Mixfile do
       {:guardian, "~> 1.0-beta"},
       {:ecto_autoslug_field, "~> 0.3"},
       {:arc, "~> 0.8"},
+      {:briefly, "~> 0.3"},
 
       # If using Amazon S3:
       {:ex_aws, "~> 1.1"},

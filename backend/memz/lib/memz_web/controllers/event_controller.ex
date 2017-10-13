@@ -7,6 +7,8 @@ defmodule MemzWeb.EventController do
   alias MemzWeb.Guardian
   alias Memz.Repo
   alias MemzWeb.Guardian.Plug
+  alias ExAws.S3
+  alias Memz.Events.Uploader
 
   action_fallback MemzWeb.FallbackController
 
@@ -26,6 +28,40 @@ defmodule MemzWeb.EventController do
       |> put_status(:ok)
       |> render("show.json", event: event)
     end
+
+  end
+
+  def images(conn, %{"id" => id, "_json" => input}) do
+
+
+    user = Plug.current_resource(conn)
+
+
+    {start, length} = :binary.match(input, ";base64,")
+    raw = :binary.part(input, start + length, byte_size(input) - start - length)
+
+    {:ok, path} = Briefly.create
+
+    File.write!(path, Base.decode64!(raw))
+
+
+    {:ok, name} = Uploader.store({path, user})
+
+
+#    filename = :crypto.hash(:md5, path) |> Base.encode16 |> String.downcase
+
+#    path
+#    |> S3.Upload.stream_file
+#    |> S3.upload("event-images", filename <> ".jpg")
+#    |> ExAws.request!
+
+
+
+
+    conn
+    |> put_status(:ok)
+    |> text(name)
+    |> halt()
 
   end
 
