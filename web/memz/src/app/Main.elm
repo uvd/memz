@@ -20,6 +20,7 @@ import Phoenix.Socket
 import Regex
 import Route exposing (..)
 import Task
+import Utilities exposing (..)
 
 
 type alias LocalStorageRecord =
@@ -40,15 +41,15 @@ view model =
 
 
 updateNewEvent : (NewEvent -> NewEvent) -> Model -> Model
-updateNewEvent update m =
-    let
-        updatedNewEvent =
-            update m.newEvent
-    in
-    { m | newEvent = updatedNewEvent }
+updateNewEvent =
+    Utilities.update (\model newEvent -> {model | newEvent = newEvent}) .newEvent
 
 return: Model -> (Model, Cmd Msg)
 return m = (m, Cmd.none)
+
+updateCurrentEvent: (CurrentEvent -> CurrentEvent) -> Model -> Model
+updateCurrentEvent =
+    Utilities.update (\model currentEvent -> {model | currentEvent = currentEvent}) .currentEvent
         
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -115,14 +116,13 @@ update msg model =
 
                 ( phxSocket, phxCmd ) =
                     Phoenix.Socket.join channel model.phxSocket
-
-                currentEvent =
-                    model.currentEvent
-
-                updatedEvent =
-                    { currentEvent | event = Just response }
+                        
             in
-            ( { model | currentEvent = updatedEvent, phxSocket = phxSocket }, Cmd.map Messages.PhoenixMsg phxCmd )
+            (
+             { model | phxSocket = phxSocket }
+                    |> updateCurrentEvent (\e -> { e | event = Just response }),
+                 Cmd.map Messages.PhoenixMsg phxCmd
+            )
 
         Messages.GetEventResponse (Result.Err err) ->
             Debug.log "Error getting event"
@@ -164,31 +164,21 @@ update msg model =
 
                 Just event ->
                     let
-                        currentEvent =
-                            model.currentEvent
-
-                        updatedEvent =
-                            { currentEvent | photos = photos }
-
                         updatedSocket =
                             model.phxSocket
                                 |> Phoenix.Socket.on "new:photo" ("event:" ++ toString event.id) Messages.ReceiveNewPhoto
                     in
-                    return { model | currentEvent = updatedEvent, phxSocket = updatedSocket }
+                    {model | phxSocket = updatedSocket }
+                        |> updateCurrentEvent (\e -> {e | photos = photos})
+                        |> return
 
         Messages.PhotoSelected nativeFiles ->
             let
                 task =
                     List.map (.blob >> FileReader.readAsDataUrl) nativeFiles
                         |> Task.sequence
-
-                currentEvent =
-                    model.currentEvent
-
-                updatedCurrentEvent =
-                    { currentEvent | status = Uploading }
             in
-            ( { model | currentEvent = updatedCurrentEvent }, Task.attempt Messages.UploadPhoto task )
+            ( updateCurrentEvent (\e -> {e | status = Uploading}) model, Task.attempt Messages.UploadPhoto task )
 
         Messages.UploadPhoto (Err err) ->
             Debug.log "Error encoding photo" <| return model
@@ -207,36 +197,16 @@ update msg model =
                     return model
 
         Messages.PostPhotoResponse (Err err) ->
-            let
-                currentEvent =
-                    model.currentEvent
-
-                updatedCurrentEvent =
-                    { currentEvent | status = Idle }
-            in
-            Debug.log "Error uplodaing photo" ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+            Debug.log "Error uplodaing photo" 
+                (return <| updateCurrentEvent (\e -> {e | status = Idle}) model)
 
         Messages.PostPhotoResponse (Ok _) ->
-            let
-                currentEvent =
-                    model.currentEvent
-
-                updatedCurrentEvent =
-                    { currentEvent | status = Idle }
-            in
-            return { model | currentEvent = updatedCurrentEvent }
+            return <| updateCurrentEvent (\e -> {e | status = Idle}) model
 
         Messages.ReceiveNewPhoto value ->
             case Decode.decodeValue photoDecoder value of
                 Ok photo ->
-                    let
-                        currentEvent =
-                            model.currentEvent
-
-                        updatedCurrentEvent =
-                            { currentEvent | photos = photo :: currentEvent.photos }
-                    in
-                    Debug.log "Photo received" <| return { model | currentEvent = updatedCurrentEvent }
+                    Debug.log "Photo received" <| return (updateCurrentEvent (\e -> {e | photos = photo :: e.photos}) model)
                 Err err ->
                     Debug.log (toString err) <| return model
 
