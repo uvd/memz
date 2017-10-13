@@ -49,7 +49,15 @@ defmodule Memz.Mixfile do
       {:cors_plug, "~> 1.2"},
       {:timex, "~> 3.1"},
       {:guardian, "~> 1.0-beta"},
-      {:ecto_autoslug_field, "~> 0.3"}
+      {:ecto_autoslug_field, "~> 0.3"},
+      {:arc, "~> 0.8"},
+
+      # If using Amazon S3:
+      {:ex_aws, "~> 1.1"},
+      {:hackney, "~> 1.6"},
+      {:poison, "~> 3.1"},
+      {:sweet_xml, "~> 0.6"},
+      {:arc_ecto, "~> 0.7.0"}
     ]
   end
 
