@@ -48,31 +48,33 @@ updateNewEvent update m =
     in
     { m | newEvent = updatedNewEvent }
 
-
+return: Model -> (Model, Cmd Msg)
+return m = (m, Cmd.none)
+        
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Messages.Name n ->
-            ( updateNewEvent (\x -> { x | name = n }) model, Cmd.none )
+            return <| updateNewEvent (\x -> { x | name = n }) model
 
         Messages.Owner o ->
-            ( updateNewEvent (\x -> { x | owner = o }) model, Cmd.none )
+            return <| updateNewEvent (\x -> { x | owner = o }) model
 
         Messages.EndDateTime d ->
-            ( updateNewEvent (\x -> { x | endDateTime = d }) model, Cmd.none )
+            return <| updateNewEvent (\x -> { x | endDateTime = d }) model
 
         Messages.IncrementStep ->
-            ( updateNewEvent (\x -> { x | step = CreateEventPage.incrementCurrentStep x.step }) model, Cmd.none )
+            return <| updateNewEvent (\x -> { x | step = CreateEventPage.incrementCurrentStep x.step }) model
 
         Messages.CreateEvent ->
-            ( model, postCreateEvent model.baseUrl (bodyEncoder model.newEvent) )
+            ( model, postCreateEvent model.baseUrl <| bodyEncoder model.newEvent )
 
         Messages.CreateEventResponse (Result.Ok ( header, { id, slug } )) ->
             let
                 eventUrl =
                     "/#/event/" ++ toString id ++ "/" ++ slug
             in
-            ( { model | token = Just header }, Cmd.batch [ setLocalStorageItem ( "authToken", header ), Navigation.newUrl <| eventUrl ] )
+            { model | token = Just header } ! [ setLocalStorageItem ( "authToken", header ), Navigation.newUrl eventUrl ]
 
         Messages.CreateEventResponse (Result.Err err) ->
             case err of
@@ -86,18 +88,18 @@ update msg model =
                     in
                     case decodedResponse of
                         Ok serverErrors ->
-                            ( updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel, Cmd.none )
+                            return <| updateNewEvent (\x -> { x | errors = serverErrors }) updatedModel
 
                         Err _ ->
-                            ( updatedModel, Cmd.none )
+                            return updatedModel
 
                 Http.BadPayload err _ ->
                     Debug.log ("BAD PAYLOAD ERROR" ++ err)
-                        ( model, Cmd.none )
+                        return model
 
                 _ ->
                     Debug.log "ERROR"
-                        ( model, Cmd.none )
+                        return model
 
         Messages.GetEventResponse (Result.Ok response) ->
             let
@@ -141,7 +143,7 @@ update msg model =
             )
 
         Messages.LocalStorageResponse _ ->
-            ( model, Cmd.none )
+            return model
 
         Messages.PhoenixMsg msg ->
             let
@@ -173,7 +175,7 @@ update msg model =
                             model.phxSocket
                                 |> Phoenix.Socket.on "new:photo" ("event:" ++ toString event.id) Messages.ReceiveNewPhoto
                     in
-                    ( { model | currentEvent = updatedEvent, phxSocket = updatedSocket }, Cmd.none )
+                    return { model | currentEvent = updatedEvent, phxSocket = updatedSocket }
 
         Messages.PhotoSelected nativeFiles ->
             let
@@ -190,7 +192,7 @@ update msg model =
             ( { model | currentEvent = updatedCurrentEvent }, Task.attempt Messages.UploadPhoto task )
 
         Messages.UploadPhoto (Err err) ->
-            Debug.log "Error encoding photo" ( model, Cmd.none )
+            Debug.log "Error encoding photo" <| return model
 
         Messages.UploadPhoto (Ok values) ->
             let
@@ -203,7 +205,7 @@ update msg model =
                     ( model, postPhoto photo id slug model.baseUrl token )
 
                 _ ->
-                    ( model, Cmd.none )
+                    return model
 
         Messages.PostPhotoResponse (Err err) ->
             let
@@ -223,7 +225,7 @@ update msg model =
                 updatedCurrentEvent =
                     { currentEvent | status = Idle }
             in
-            ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+            return { model | currentEvent = updatedCurrentEvent }
 
         Messages.ReceiveNewPhoto value ->
             case Decode.decodeValue photoDecoder value of
@@ -235,22 +237,16 @@ update msg model =
                         updatedCurrentEvent =
                             { currentEvent | photos = photo :: currentEvent.photos }
                     in
-                    Debug.log "Photo received" ( { model | currentEvent = updatedCurrentEvent }, Cmd.none )
+                    Debug.log "Photo received" <| return { model | currentEvent = updatedCurrentEvent }
                 Err err ->
-                    Debug.log (toString err) (model, Cmd.none)
+                    Debug.log (toString err) <| return model
 
 
 commandForRoute : Route -> Maybe String -> String -> Cmd Msg
 commandForRoute route token baseUrl =
-    case route of
-        Private (EventRoute id slug) ->
-            case token of
-                Just token ->
-                    getRequestForEvent id slug token baseUrl
-
-                Nothing ->
-                    Cmd.none
-
+    case (route, token) of
+        (Private (EventRoute id slug), Just token) ->
+            getRequestForEvent id slug token baseUrl
         _ ->
             Cmd.none
 
