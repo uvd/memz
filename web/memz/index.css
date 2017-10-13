@@ -1,6 +1,5 @@
 body {
     overflow-x: auto;
-    min-width: 1280px;
     font-family: sofia-pro;
     text-align: center;
     color: #0BC5C4;
@@ -25,4 +24,26 @@ body {
 .dreamwriterNavBar > li {
     display: inline-block !important;
     color: #ccffaa;
+}
+
+.homepageCreateEventBtn {
+    background-color: #0BC5C4;
+    color: #FFFFFF;
+    display: inline-block;
+    text-decoration: none;
+    padding: 12px 20px;
+}
+
+.homepageValueProp {
+    max-width: 60%;
+    margin: auto;
+}
+
+.homepagePageWrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    justify-content: space-between;
 }

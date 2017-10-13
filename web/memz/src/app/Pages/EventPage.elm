@@ -6,6 +6,12 @@ import Html.Attributes exposing (..)
 import Messages exposing (Msg)
 import Model exposing (..)
 import FileReader
+import Styles.EventPageCss exposing (..)
+import Html.CssHelpers exposing (withNamespace)
+
+
+{ id, class, classList } =
+    Html.CssHelpers.withNamespace "event"
 
 
 view : Model -> Html Msg
@@ -15,21 +21,25 @@ view model =
             div [] [ text "Page loading" ]
 
         Just event ->
-            div []
+            div [ class [ PageWrapper ] ]
                 [ header []
                     [ h1 [] [ text event.name ]
                     , p [] [ text ("Created by " ++ event.owner) ]
                     ]
-                , ul
-                    []
-                    (List.map renderPhoto model.currentEvent.photos)
-                , input
-                    [ type_ "file"
-                    , accept "image/*"
-                    , FileReader.onFileChange Messages.PhotoSelected
+                , div [ class [ Content ] ]
+                    [ ul
+                        [ class [ Stream ] ]
+                        (List.map renderPhoto model.currentEvent.photos)
                     ]
-                    []
-                , p [] [ text (toString model.currentEvent.status) ]
+                , div [ class [ Footer ] ]
+                    [ input
+                        [ type_ "file"
+                        , accept "image/*"
+                        , FileReader.onFileChange Messages.PhotoSelected
+                        ]
+                        []
+                    , p [] [ text (toString model.currentEvent.status) ]
+                    ]
                 ]
 
 
