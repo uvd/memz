@@ -10,10 +10,10 @@ defmodule Memz.Events.Image do
   alias Memz.Events.Event
 
   schema "images" do
-    field :file, Memz.Events.Uploader.Type
+    field(:file, Memz.Events.Uploader.Type)
 
-    belongs_to :user, User
-    belongs_to :event, Event
+    belongs_to(:user, User)
+    belongs_to(:event, Event)
 
     timestamps()
   end
@@ -25,7 +25,6 @@ defmodule Memz.Events.Image do
   with no validation performed.
   """
   def changeset(image, params \\ :invalid) do
-
     IO.inspect(params)
 
     image
@@ -35,7 +34,6 @@ defmodule Memz.Events.Image do
   end
 
   def dummy_changeset(image, params \\ :invalid) do
-
     IO.inspect(params)
 
     image

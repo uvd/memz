@@ -4,11 +4,10 @@ defmodule Memz.Accounts.User do
   alias Memz.Accounts.User
 
   schema "users" do
-    field :name, :string
+    field(:name, :string)
 
-    has_many :events, Memz.Events.Event
-    has_many :images, Memz.Events.Image
-
+    has_many(:events, Memz.Events.Event)
+    has_many(:images, Memz.Events.Image)
   end
 
   def changeset(%User{} = user, attrs) do
@@ -17,5 +16,4 @@ defmodule Memz.Accounts.User do
     |> validate_required([:name])
     |> validate_length(:name, min: 2, max: 30)
   end
-
 end

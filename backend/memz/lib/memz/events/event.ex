@@ -10,12 +10,12 @@ defmodule Memz.Events.Event do
   alias Memz.Accounts.User
 
   schema "events" do
-    field :name, :string
-    field :end_date, :naive_datetime
-    field :slug, NameSlug.Type
+    field(:name, :string)
+    field(:end_date, :naive_datetime)
+    field(:slug, NameSlug.Type)
 
-    belongs_to :user, User
-    has_many :images, Memz.Events.Image
+    belongs_to(:user, User)
+    has_many(:images, Memz.Events.Image)
 
     timestamps()
   end
@@ -27,23 +27,18 @@ defmodule Memz.Events.Event do
     |> validate_required([:name, :end_date, :user_id])
     |> validate_length(:name, min: 4, max: 20)
     |> validate_date_in_future(:end_date)
-    |> NameSlug.maybe_generate_slug
+    |> NameSlug.maybe_generate_slug()
   end
 
   def validate_date_in_future(changeset, field) do
-
     validate_change(changeset, field, fn _, end_date ->
+      now = Ecto.DateTime.utc()
+      {:ok, target_date} = Ecto.DateTime.cast(end_date)
 
-        now = Ecto.DateTime.utc
-        {:ok, target_date} = Ecto.DateTime.cast(end_date)
-
-        case Ecto.DateTime.compare(now, target_date) do
-          :gt -> [{field, "Time must be in the future"}]
-          _ -> []
-        end
-
+      case Ecto.DateTime.compare(now, target_date) do
+        :gt -> [{field, "Time must be in the future"}]
+        _ -> []
+      end
     end)
-
   end
-
 end

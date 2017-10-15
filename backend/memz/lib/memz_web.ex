@@ -28,8 +28,9 @@ defmodule MemzWeb do
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/memz_web/templates",
-                        namespace: MemzWeb
+      use Phoenix.View,
+        root: "lib/memz_web/templates",
+        namespace: MemzWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]

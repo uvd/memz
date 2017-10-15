@@ -1,5 +1,4 @@
 defmodule Memz.Events.Uploader do
-
   use Arc.Definition
   use Arc.Ecto.Definition
 
@@ -11,7 +10,7 @@ defmodule Memz.Events.Uploader do
   def acl(:thumb, _), do: :public_read
 
   def validate({file, _}) do
-    file_extension = file.file_name |> Path.extname |> String.downcase
+    file_extension = file.file_name |> Path.extname() |> String.downcase()
     Enum.member?(@extension_whitelist, file_extension)
   end
 
@@ -38,7 +37,7 @@ defmodule Memz.Events.Uploader do
   end
 
   def s3_object_headers(version, {file, scope}) do
-    [content_type: Plug.MIME.path(file.file_name)] # for "image.png", would produce: "image/png"
+    # for "image.png", would produce: "image/png"
+    [content_type: Plug.MIME.path(file.file_name)]
   end
-
 end

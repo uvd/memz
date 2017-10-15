@@ -19,13 +19,9 @@ defmodule Memz.Accounts do
 
   """
   def create_user(attrs \\ %{}) do
-
-
     %User{}
     |> User.changeset(attrs)
     |> Repo.insert()
-
-
   end
 
   @doc """
@@ -43,5 +39,4 @@ defmodule Memz.Accounts do
 
   """
   def get_user!(id), do: Repo.get!(User, id)
-
 end

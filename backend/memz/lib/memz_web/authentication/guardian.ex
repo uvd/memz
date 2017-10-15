@@ -12,10 +12,9 @@ defmodule MemzWeb.Guardian do
   end
 
   def resource_from_claims(claims) do
-
     %{"sub" => user_id} = claims
 
-    {user_id, _} = user_id |> Integer.parse
+    {user_id, _} = user_id |> Integer.parse()
 
     {:ok, Accounts.get_user!(user_id)}
   end

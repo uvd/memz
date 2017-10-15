@@ -16,29 +16,30 @@ defmodule Memz.ReleaseTasks do
 
   def seed do
     # Load the code for Memz, but don't start it
-    IO.write "> Loading Memz..."
+    IO.write("> Loading Memz...")
     :ok = Application.load(:memz)
-    IO.puts " Done."
+    IO.puts(" Done.")
 
     # Start apps necessary for executing migrations
-    IO.write "> Starting dependencies..."
+    IO.write("> Starting dependencies...")
     Enum.each(@start_apps, &Application.ensure_all_started/1)
-    IO.puts " Done."
+    IO.puts(" Done.")
 
     # Start the Repo(s) for myapp
-    IO.write "> Starting repositories..."
+    IO.write("> Starting repositories...")
     Enum.each(@repos, &apply(&1, :start_link, []))
-    IO.puts " Done."
+    IO.puts(" Done.")
 
     # Run migrations
     Enum.each(@repos, &run_migrations_for/1)
 
     # Run the seed script if it exists
     seed_script = Path.join([priv_dir(), "repo", "seeds.exs"])
+
     if File.exists?(seed_script) do
-      IO.write "> Running seed script..."
+      IO.write("> Running seed script...")
       Code.eval_file(seed_script)
-      IO.puts " Done."
+      IO.puts(" Done.")
     end
 
     :init.stop()
@@ -47,12 +48,9 @@ defmodule Memz.ReleaseTasks do
   def priv_dir, do: Application.app_dir(:memz, "priv")
 
   defp run_migrations_for(app) do
-    IO.puts "> Running migrations for #{app}..."
+    IO.puts("> Running migrations for #{app}...")
     Migrator.run(app, migrations_path(), :up, all: true)
   end
 
   defp migrations_path, do: Path.join([priv_dir(), "repo", "migrations"])
-
-
-
 end

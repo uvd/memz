@@ -14,16 +14,10 @@ defmodule MemzWeb.ImageView do
   end
 
   def render("image.json", %{image: image}) do
-
     image = Repo.preload(image, :user)
 
     public_url = Uploader.url({image.file, image})
 
-
-    %{path: public_url,
-      owner: image.user.name,
-      date: image.inserted_at
-    }
-
+    %{path: public_url, owner: image.user.name, date: image.inserted_at}
   end
 end

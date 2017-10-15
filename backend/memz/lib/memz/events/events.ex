@@ -38,16 +38,16 @@ defmodule Memz.Events do
 
   """
   def get_event!(id) do
-
+    # left_join: i in assoc(event, :images),
+    # left_join: o in assoc(i, :user),
     Repo.one(
-      from event in Event,
-      join: u in assoc(event, :user),
-      #left_join: i in assoc(event, :images),
-      #left_join: o in assoc(i, :user),
-      where: event.id == ^id,
-      preload: [:user, {:images, :user}]
+      from(
+        event in Event,
+        join: u in assoc(event, :user),
+        where: event.id == ^id,
+        preload: [:user, {:images, :user}]
+      )
     )
-
   end
 
   @doc """
@@ -63,13 +63,10 @@ defmodule Memz.Events do
 
   """
   def create_event(attrs \\ %{}) do
-
     %Event{}
-      |> Event.changeset(attrs)
-      |> Repo.insert()
-
+    |> Event.changeset(attrs)
+    |> Repo.insert()
   end
-
 
   @doc """
   Creates a image for a user and an event.
@@ -84,14 +81,10 @@ defmodule Memz.Events do
 
   """
   def create_image(file, event, user) do
-
-
     %Image{}
-      |> Image.changeset(%{file: file, user_id: user.id, event_id: event.id})
-      |> Repo.insert()
-
+    |> Image.changeset(%{file: file, user_id: user.id, event_id: event.id})
+    |> Repo.insert()
   end
-
 
   @doc """
   Updates a event.

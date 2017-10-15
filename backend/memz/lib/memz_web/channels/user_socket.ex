@@ -3,10 +3,10 @@ defmodule MemzWeb.UserSocket do
 
   ## Channels
   # channel "room:*", MemzWeb.RoomChannel
-  channel "event:*", MemzWeb.EventChannel
+  channel("event:*", MemzWeb.EventChannel)
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
+  transport(:websocket, Phoenix.Transports.WebSocket)
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can

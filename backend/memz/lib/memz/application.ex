@@ -11,7 +11,7 @@ defmodule Memz.Application do
       # Start the Ecto repository
       supervisor(Memz.Repo, []),
       # Start the endpoint when the application starts
-      supervisor(MemzWeb.Endpoint, []),
+      supervisor(MemzWeb.Endpoint, [])
       # Start your own worker by calling: Memz.Worker.start_link(arg1, arg2, arg3)
       # worker(Memz.Worker, [arg1, arg2, arg3]),
     ]

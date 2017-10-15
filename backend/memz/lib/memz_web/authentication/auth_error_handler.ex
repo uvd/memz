@@ -5,11 +5,9 @@ defmodule MemzWeb.AuthErrorHandler do
   use Phoenix.Controller, namespace: MemzWeb
 
   def auth_error(conn, {type, reason}, _opts) do
-
     conn
     |> put_status(:unauthorized)
     |> text("Unauthorized access")
     |> halt()
   end
-
 end
