@@ -18,6 +18,14 @@ docker-compose -f docker-compose.test.yml up
 docker-compose exec elixir bin/bash -c "MIX_ENV=test mix test"
 ```
 
+## Formatting
+
+To format the lib and test directory:
+
+```
+mix format
+```
+
 ## Debugging
 
 To start the Elixir shell:
